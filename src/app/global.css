@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme static {
+    --color-ariom:#f99d2a;
+    --color-inkwell:#1E1E1E;
+    --text-h1: 3.815rem;
+    --text-h2: 3.052rem;
+    --text-h3: 2.441rem;
+    --text-h4: 1.953rem;
+    --text-h5: 1.563rem;
+    --text-h6: 1.25rem;
+}
+
+h1 { @apply text-h1 leading-[1.6] font-bold mb-4; }
+h2 { @apply text-h2 leading-[1.6] font-bold mb-4; }
+h3 { @apply text-h3 leading-[1.6] font-bold mb-4; }
+h4 { @apply text-h4 leading-[1.6] font-bold mb-4; }
+h5 { @apply text-h5 leading-[1.6] font-bold mb-4; }
+h6 { @apply text-h6 leading-[1.6] font-bold mb-4; }
+
+p { @apply text-base font-light mb-4; }

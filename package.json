@@ -5,12 +5,16 @@
     "type": "module",
     "scripts": {
         "safelist": "node scripts/build-safelist.js",
-        "dev": "concurrently -n 'SAFELIST,NEXT' -c 'yellow.bold,cyan.bold' \"node scripts/build-safelist.js\" \"next dev\" ",
+        "watch": "concurrently -n 'SAFELIST,NEXT' -c 'yellow.bold,cyan.bold' \"node scripts/build-safelist.js\" \"next dev\" ",
+        "dev": "next dev",
         "start": "next start",
         "lint": "next lint",
         "build": "npm run safelist && next build"
+        
     },
     "dependencies": {
+        "highlight.js": "^11.11.1",
+        "html-react-parser": "^5.2.5",
         "next": "15.3.3",
         "react": "^19.0.0",
         "react-dom": "^19.0.0"

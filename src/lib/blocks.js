@@ -1,4 +1,5 @@
 import React from 'react';
+import parse from 'html-react-parser';
 import {
     extractTextAndClasses,
     contentPositionToTailwind,
@@ -379,6 +380,125 @@ export function renderBlock(block, keyPrefix = 'block', postContext = {}) {
             );
         }
 
+        //pullquote block
+        case 'core/pullquote': {
+            const { className = '' } = attrs;
+            const blockClassName = 'pullquote-block';
+            const finalClassNames = joinClassNames(blockClassName, className);
+
+            // Extract <p> and <cite> content from innerHTML
+            const quoteMatch = innerHTML.match(/<blockquote[^>]*>\s*<p>([\s\S]*?)<\/p>/i);
+            const citeMatch = innerHTML.match(/<cite[^>]*>([\s\S]*?)<\/cite>/i);
+
+            const quoteHTML = quoteMatch?.[1]?.trim() || '';
+            const citeText = citeMatch?.[1]?.trim() || '';
+
+            return (
+                <figure key={key} className={finalClassNames}>
+                    <blockquote>
+                        <p>{renderInlineHTML(quoteHTML)}</p>
+                        {citeText && <cite>{citeText}</cite>}
+                    </blockquote>
+                </figure>
+            );
+        }
+
+        //details/summary block
+        case 'core/details': {
+            const {
+                className = '',
+                showContent = false,
+            } = attrs;
+
+            const blockClassName = 'details-block';
+            const finalClassNames = joinClassNames(blockClassName, className);
+
+            const summaryMatch = innerHTML.match(/<summary[^>]*>([\s\S]*?)<\/summary>/i);
+            const summaryText = summaryMatch?.[1]?.trim() || 'Details';
+
+            return (
+                <details key={key} className={finalClassNames} open={showContent}>
+                    <summary>{renderInlineHTML(summaryText)}</summary>
+                    <div className={`${blockClassName}--content`}>
+                        {innerBlocks.map((child, i) =>
+                            renderBlock(child, `${keyPrefix}-details-${i}`, postContext)
+                        )}
+                    </div>
+                </details>
+            );
+
+        }
+
+        //media-text block
+        case 'core/media-text': {
+            const {
+                className = '',
+                mediaType = 'image',
+                mediaLink,
+                mediaPosition = 'left',
+                imageFill = false,
+                useFeaturedImage = false,
+            } = attrs;
+
+            const blockClassName = 'media-text-block';
+            const alignmentClass = `media-text--${mediaPosition}`;
+            const fillClass = imageFill ? 'media-text--fill' : '';
+            const finalClassNames = joinClassNames(
+                blockClassName,
+                alignmentClass,
+                fillClass,
+                className
+            );
+
+            // Get media image from postContext if using featured image
+            let mediaElement = null;
+            if (useFeaturedImage && postContext?.postImage) {
+                mediaElement = (
+                    <img
+                        src={postContext.postImage}
+                        alt="Featured"
+                        className={joinClassNames('media-image', imageFill ? 'media-image--fill' : '')}
+                    />
+                );
+            } else {
+                // fallback to parsing image from innerHTML
+                const mediaHTML = innerHTML.match(/<figure[^>]*>([\s\S]*?)<\/figure>/i)?.[1] || '';
+                mediaElement = parse(mediaHTML, {
+                    replace: (node) => {
+                        if (node.type === 'tag' && node.name === 'img') {
+                            return (
+                                <img
+                                    src={node.attribs.src}
+                                    alt={node.attribs.alt || ''}
+                                    className={joinClassNames('media-image', imageFill ? 'media-image--fill' : '')}
+                                />
+                            );
+                        }
+                    }
+                });
+            }
+
+            return (
+                <div key={key} className={finalClassNames}>
+                    <figure className="media-text-media">
+                        {mediaLink ? (
+                            <a href={mediaLink} target="_blank" rel="noopener noreferrer">
+                                {mediaElement}
+                            </a>
+                        ) : mediaElement}
+                    </figure>
+                    <div className="media-text-content">
+                        {innerBlocks.map((child, i) =>
+                            renderBlock(child, `${keyPrefix}-media-text-${i}`, postContext)
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        case 'core/footnotes': {
+            return null; //don't even go there. WP does this at render time, not in the editor
+        }
 
         default: {
             if (blockName && blockName.startsWith('core/')) {

@@ -47,6 +47,14 @@ export async function getPageBySlug(slug) {
                 guid
                 databaseId
                 blocksJSON
+                featuredImage {
+                    node {
+                        sourceUrl
+                        altText
+                        title
+                        caption
+                    }
+                }
             }
         }`,
         {

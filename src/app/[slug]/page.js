@@ -14,6 +14,7 @@ export default async function Page(props) {
         postTitle: page.title,
         postUrl: `${page.uri}`,
         postSlug: page.slug,
+        postImage: page.featuredImage?.node?.sourceUrl,
     };
 
     const blocks = parseBlocks(page.blocksJSON);
@@ -23,7 +24,7 @@ export default async function Page(props) {
         renderBlock(block, `block-${i}`, postContext)
     );
 
-    //console.log("SentContext:", postContext);
+    //console.log("SentContext:", page);
 
     return (
         <>

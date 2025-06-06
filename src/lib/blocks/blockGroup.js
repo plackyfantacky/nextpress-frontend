@@ -1,6 +1,5 @@
 import React from "react";
-import { contentPositionToTailwind, joinClassNames, withConditionalInnerWrapper } from "../utils";
-import { renderBlock } from "./index";
+import { joinClassNames, withConditionalInnerWrapper } from "../utils";
 
 export default function BlockGroup({ block, keyPrefix, postContext, children }) {
     const { attrs = {}, blockClassName = '', innerHTML = '' } = block;
@@ -17,7 +16,7 @@ export default function BlockGroup({ block, keyPrefix, postContext, children }) 
     let computedClassName = blockClassName;
 
     if (type === 'flex') {
-        computedClassName = orientation === 'horizontal' ? 'row-block' : 'column-block';
+        computedClassName = orientation === 'horizontal' ? 'row-block' : 'stack-block';
         layoutClass = orientation === 'horizontal' ? 'flex flex-row' : 'flex flex-col';
     }
 
@@ -26,7 +25,7 @@ export default function BlockGroup({ block, keyPrefix, postContext, children }) 
 
     return (
         <Tag key={keyPrefix} className={finalClassNames} >
-            {withConditionalInnerWrapper(children, innerHTML)}
+            {withConditionalInnerWrapper(children, innerHTML, blockClassName)}
         </Tag>
     );
 }

@@ -35,68 +35,90 @@ export function decodeHTMLEntities(encoded = '') {
 
 export function renderInlineHTML(html = '') {
     const replace = (node) => {
-            if (node.type !== 'tag') return;
-            
-            const { name, children = [], attribs = {} } = node;
+        if (node.type !== 'tag') return;
 
-            switch (name) {
-                case 'strong':
-                case 'em':
-                case 'b': //extra
-                case 'i': //extra
-                case 'sub':
-                case 'sup':
-                case 'del':
-                case 'span': //extra
-                    return React.createElement(name, {}, domToReact(children, { replace }));
+        const { name, children = [], attribs = {} } = node;
 
-                case 'a':
-                    return (
-                        <a href={attribs.href || '#'} target="_blank" rel="noopener noreferrer">
-                            {domToReact(children, { replace })}
-                        </a>
-                    );
-                
-                case 'code':
-                    return <code className="inline-code">{domToReact(children, { replace })}</code>;
+        switch (name) {
+            case 'strong':
+            case 'em':
+            case 'b': //extra
+            case 'i': //extra
+            case 'sub':
+            case 'sup':
+            case 'del':
+            case 'span': //extra
+                return React.createElement(name, {}, domToReact(children, { replace }));
 
-                case 'kbd':
-                    return <kbd className="kbd">{domToReact(children, { replace })}</kbd>;
+            case 'a':
+                return (
+                    <a href={attribs.href || '#'} target="_blank" rel="noopener noreferrer">
+                        {domToReact(children, { replace })}
+                    </a>
+                );
 
-                case 'mark':
-                    return <mark className="highlight">{domToReact(children, { replace })}</mark>;
+            case 'code':
+                return <code className="inline-code">{domToReact(children, { replace })}</code>;
 
-                case 'img':
-                    return (
-                        <img
-                            src={attribs.src}
-                            alt={attribs.alt || ''}
-                            className="inline-image"
-                            style={{ display: 'inline', maxHeight: '1em', verticalAlign: 'middle' }}
-                        />
-                    );
+            case 'kbd':
+                return <kbd className="kbd">{domToReact(children, { replace })}</kbd>;
 
-                case 'sup':
-                    // Handle footnotes like: <sup><a href="#fn1" id="fnref1">1</a></sup>
-                    if (children.length === 1 && children[0].name === 'a') {
-                        return (
-                            <sup>
-                                <a
-                                    href={children[0].attribs?.href || '#'}
-                                    id={children[0].attribs?.id || ''}
-                                    className="footnote"
-                                >
-                                    {domToReact(children[0].children)}
-                                </a>
-                            </sup>
-                        );
+            case 'mark':
+                const rawStyle = attribs.style || '';
+                const className = attribs.class || '';
+
+                const parsedStyle = rawStyle ? rawStyle.split(';').reduce((acc, rule) => {
+                    const [key, value] = rule.split(':').map(s => s.trim());
+                    if (key && value) {
+                        const reactKey = key.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+                        acc[reactKey] = value;
                     }
-                    return <sup>{domToReact(children, { replace })}</sup>;
+                    return acc;
+                }, {}) : {};
 
-                default:
-                    return undefined;
-            }
+                const onlyContainsText = children?.every(
+                    child => child.type === 'text' || (child.type === 'tag' && child.name === 'br')
+                );
+
+                if (!onlyContainsText) {
+                    console.warn('<mark> contains unexpected non-text nodes.');
+                }
+
+                return <mark className={className} style={parsedStyle}>
+                    {domToReact(children)}
+                </mark>;
+
+            case 'img':
+                return (
+                    <img
+                        src={attribs.src}
+                        alt={attribs.alt || ''}
+                        className="inline-image"
+                        style={{ display: 'inline', maxHeight: '1em', verticalAlign: 'middle' }}
+                    />
+                );
+
+            case 'sup':
+                // Handle footnotes like: <sup><a href="#fn1" id="fnref1">1</a></sup>
+                if (children.length === 1 && children[0].name === 'a') {
+                    return (
+                        <sup>
+                            <a
+                                href={children[0].attribs?.href || '#'}
+                                id={children[0].attribs?.id || ''}
+                                className="footnote"
+                            >
+                                {domToReact(children[0].children)}
+                            </a>
+                        </sup>
+                    );
+                }
+                return <sup>{domToReact(children, { replace })}</sup>;
+
+            default:
+                return undefined;
         }
-        return parse(html, { replace });
+    };
+    return parse(html, { replace });
 
 }

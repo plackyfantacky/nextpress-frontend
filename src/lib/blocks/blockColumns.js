@@ -1,6 +1,5 @@
 import React from "react";
-import { contentPositionToTailwind, joinClassNames, withConditionalInnerWrapper } from "../utils";
-import { renderBlock } from "./index";
+import { joinClassNames, withConditionalInnerWrapper } from "../utils";
 
 export default function BlockColumns({ block, keyPrefix, postContext, children }) {
     const { attrs, blockClassName, innerHTML } = block;
@@ -14,7 +13,7 @@ export default function BlockColumns({ block, keyPrefix, postContext, children }
 
     return (
         <Tag key={keyPrefix} className={finalClassNames} >
-            {withConditionalInnerWrapper(children, innerHTML)}
+            {withConditionalInnerWrapper(children, innerHTML, blockClassName)}
         </Tag>
     );
 }

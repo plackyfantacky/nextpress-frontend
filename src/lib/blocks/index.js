@@ -5,6 +5,7 @@ const blockRenderers = {
     'core/group': () => import('./blockGroup'),
     'core/columns': () => import('./blockColumns'),
     'core/column': () => import('./blockColumn'),
+    'core/paragraph': () => import('./blockParagraph'),
     
     // Add other block renderers here
 };

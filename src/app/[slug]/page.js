@@ -1,5 +1,6 @@
 import { getPageBySlug } from "@/lib/api";
 import { parseBlocks, renderBlock } from "@/lib/blocks";
+import { PerformanceMarker } from "@/lib/performance";
 
 export const dynamic = 'force-dynamic';
 
@@ -20,14 +21,17 @@ export default async function Page(props) {
     const blocks = parseBlocks(page.blocksJSON);
     if (!blocks || blocks.length === 0) return <div>No content available</div>;
 
+    const t0 = performance.now();
     const renderedBlocks = blocks.map((block, i) =>
         renderBlock(block, `block-${i}`, postContext)
     );
-
-    //console.log("SentContext:", page);
+    const t1 = performance.now();
+    
+    console.log(`🕓 Rendered ${blocks.length} blocks in ${t1 - t0} ms`);
 
     return (
         <>
+            <PerformanceMarker />
             {renderedBlocks}
         </>
     );

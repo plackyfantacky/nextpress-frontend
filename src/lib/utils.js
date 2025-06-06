@@ -104,9 +104,13 @@ export function joinClassNames(...args) {
  * @param {string} innerHTML - The innerHTML string to check for the "inner" class.
  * @returns {ReactNode} The children wrapped in a div with class "inner" if applicable.
  */
-export function withConditionalInnerWrapper(children, innerHTML = '') {
-    return innerHTML.includes('class="inner"') || innerHTML.includes("class='inner'")
-        ? <div className="inner">{children}</div>
+export function withConditionalInnerWrapper(children, innerHTML = '', blockName = '') {
+    const hasInner = innerHTML.includes('class="inner"') || innerHTML.includes("class='inner'");
+    const blockSuffix = blockName ? `${blockName.replace('-block', '')}-inner` : '';
+    const innerClasses = hasInner ? `${blockSuffix} inner`.trim() : '';
+
+    return hasInner 
+        ? <div className={innerClasses}>{children}</div>
         : children;
 }
 
@@ -144,4 +148,12 @@ export function mapQuoteStyles(attrs = {}) {
     }
 
     return classes;
+}
+
+export function stripParagraphWrapper(html = '') {
+    return html
+        .trim()
+        .replace(/^<p[^>]*>/i, '')
+        .replace(/<\/p>$/i, '')
+        .trim();
 }

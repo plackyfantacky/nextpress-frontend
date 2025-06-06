@@ -22,22 +22,7 @@ const wrappableBlocks = [
     'core/classic',
 ];
 
-/**
- * Parses the JSON block data.
- * @param {*} blockData 
- * @return {Array} An array of parsed blocks.
- */
-export function parseBlocks(blockData) {
-    if (!blockData || typeof blockData !== 'string') return [];
 
-    try {
-        const parsed = JSON.parse(blockData);
-        return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-        console.error('Error parsing block data:', error, blockData?.slice?.(0, 100)); //we don't need that much data
-        return [];
-    }
-}
 
 /**
  * Renders a block based on its type and attributes.
@@ -60,105 +45,15 @@ export function renderBlock(block, keyPrefix = 'block', postContext = {}) {
     switch (blockName) {
 
         //cover block
-        case 'core/cover': {
-            const {
-                contentPosition = 'center center',
-                tagName = 'section',
-                className = '' //explicably set by the user in the editor
-            } = attrs;
-
-            const Tag = tagName || 'section';
-
-            const positionClass = contentPositionToTailwind(contentPosition);
-            const finalClassNames = joinClassNames(blockClassName, positionClass, className); // remove this for now ...remainingClasses
-
-            const blockChildren = innerBlocks.map((child, i) =>
-                renderBlock(child, `${keyPrefix}-cover-${i}`, postContext)
-            );
-
-            return (
-                <Tag key={key} className={finalClassNames} >
-                    {withConditionalInnerWrapper(blockChildren, innerHTML)}
-                </Tag>
-            );
-        }
+        case 'core/cover': { }
 
         //group/column/row block
-        case 'core/group': {
-            const {
-                layout = {},
-                tagName = 'div',
-                className = '' //explicably set by the user in the editor
-            } = attrs;
-
-            const type = layout.type || 'default';
-            const orientation = type === 'flex' ? layout.orientation || 'horizontal' : undefined;
-
-            let layoutClass = '';
-
-            if (type === 'flex') {
-                blockClassName = orientation === 'horizontal' ? 'row-block' : 'column-block';
-                layoutClass = orientation === 'horizontal' ? 'flex flex-row' : 'flex flex-col';
-            }
-
-            const Tag = tagName || 'div';
-
-            const finalClassNames = joinClassNames(blockClassName, layoutClass, className); // remove this for now ...remainingClasses
-
-            const blockChildren = innerBlocks.map((child, i) =>
-                renderBlock(child, `${keyPrefix}-cover-${i}`, postContext)
-            );
-
-            return (
-                <Tag key={key} className={finalClassNames} >
-                    {withConditionalInnerWrapper(blockChildren, innerHTML)}
-                </Tag>
-            );
-        }
+        case 'core/group': { }
 
         //columns (and column) block
-        case 'core/columns': {
-            const {
-                tagName = 'div',
-                className = '' //explicably set by the user in the editor
-            } = attrs;
+        case 'core/columns': { }
 
-            const Tag = tagName || 'div';
-
-            const finalClassNames = joinClassNames(blockClassName, 'grid grid-cols-12', className);
-
-            const blockChildren = innerBlocks.map((child, i) =>
-                renderBlock(child, `${keyPrefix}-cover-${i}`, postContext)
-            );
-
-            return (
-                <Tag key={key} className={finalClassNames} >
-                    {withConditionalInnerWrapper(blockChildren, innerHTML)}
-                </Tag>
-            );
-        }
-
-        case 'core/column': {
-            const {
-                width = '100%',
-                tagName = 'div',
-                className = '' //explicably set by the user in the editor
-            } = attrs;
-
-            const Tag = tagName || 'div';
-
-            const finalClassNames = joinClassNames(blockClassName, className);
-
-            const blockChildren = innerBlocks.map((child, i) =>
-                renderBlock(child, `${keyPrefix}-cover-${i}`, postContext)
-            );
-
-            return (
-                <Tag key={key} className={finalClassNames} >
-                    {withConditionalInnerWrapper(blockChildren, innerHTML)}
-                </Tag>
-            );
-        }
+        case 'core/column': { }
 
         //post title block
         case 'core/post-title': {

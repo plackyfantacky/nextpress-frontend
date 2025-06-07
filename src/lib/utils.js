@@ -4,29 +4,29 @@
  * @returns {Object} An object containing the text content, block class name (first css class) and remaining css classes.
  */
 export function extractTextAndClasses(innerHTML) {
-    if (typeof innerHTML !== 'string') return { text: '', className: '' };
+    if (typeof innerHTML !== 'string') { return { text: '', classNames: '' }; }
 
-    // SSR fallback
-    if (typeof window === 'undefined') {
+    // Parse the first tag in the string
+    const match = innerHTML.match(/<[^>]+class\s*=\s*["']([^"']+)["']/i);
+    const extractedClassNames = match?.[1] ?? '';
+    const text = innerHTML.replace(/<[^>]+>/g, '').trim();
 
-        const classMatch = innerHTML.match(/class="([^"]+)"/);
-        const text = innerHTML.replace(/<[^>]+>/g, '').trim();
+    // Remove WordPress-injected utility classes
+    const filteredClasses = extractedClassNames
+        .split(/\s+/)
+        .filter(cls => !cls.startsWith('wp-'));
 
-        return { text, blockClassName: classMatch?.[1] ?? '', remainingClasses: classMatch?.[1]?.split(/\s+/) || [] };
-    }
+    return { text, extractedClassNames: filteredClasses.join(' ') };
+}
 
-    // CSR main functionality
-    const wrapper = document.createElement('div');
-    wrapper.inertHTML = innerHTML.trim();
-
-
-    const firstEl = wrapper.firstElementChild;
-
-    return {
-        text: firstEl?.textContent?.trim() ?? '',
-        blockClassName: firstEl?.className?.trim() ?? '',
-        remainingClasses: firstEl?.className?.trim()?.split(/\s+/) || []
-    };
+/**
+ * Convert blockName from "core/paragraph" to "paragraph"
+ * @param {string} blockName - The block name to normalize.
+ * @returns {string} The normalized block name, e.g. "paragraph" or "cover".
+ */
+export function normalizeBlockName(blockName = '') {
+    if (typeof blockName !== 'string') return '';
+    return blockName.replace(/^core\//, '') + '-block'; // Append "-block" to match the convention used in block renderers
 }
 
 /**
@@ -55,36 +55,6 @@ export function contentPositionToTailwind(pos) {
 }
 
 /**
- * Normalizes a block class name by mapping WordPress block class names to custom class names.
- * This is useful for converting WordPress block class names to a more readable format.
- * @param {string} input - The block class name to normalize.
- * @returns {string} The normalized class name.
- */
-export function normalizeBlockClassName(input = '') {
-
-    if (typeof input !== 'string') return '';
-
-    const classMap = {
-        'wp-block-group': 'group-block',
-        'wp-block-columns': 'columns-block',
-        'wp-block-column': 'column-block',
-        'wp-block-cover': 'cover-block',
-        'wp-block-image': 'image',
-        'wp-block-paragraph': 'paragraph',
-        'wp-block-heading': 'heading',
-        'wp-block-list': 'list',
-        'wp-block-media-text': 'media-text-block',
-    };
-    const words = input.trim().split(/\s+/);
-
-    const renamed = words.flatMap(wpClass =>
-        classMap[wpClass]?.split(' ') || []
-    );
-
-    return renamed.join(' ');
-}
-
-/**
  * Joins multiple class names into a single string, filtering out falsy values.
  * This is useful for dynamically constructing class names in React components.
  * @param {...(string|string[]|null|undefined|boolean)} args - Class names to join.
@@ -109,7 +79,7 @@ export function withConditionalInnerWrapper(children, innerHTML = '', blockName 
     const blockSuffix = blockName ? `${blockName.replace('-block', '')}-inner` : '';
     const innerClasses = hasInner ? `${blockSuffix} inner`.trim() : '';
 
-    return hasInner 
+    return hasInner
         ? <div className={innerClasses}>{children}</div>
         : children;
 }
@@ -155,5 +125,13 @@ export function stripParagraphWrapper(html = '') {
         .trim()
         .replace(/^<p[^>]*>/i, '')
         .replace(/<\/p>$/i, '')
+        .trim();
+}
+
+export function stripHeadingWrapper(html = '') {
+    return html
+        .trim()
+        .replace(/^<h[1-6][^>]*>/i, '')
+        .replace(/<\/h[1-6]>$/i, '')
         .trim();
 }

@@ -64,18 +64,29 @@ export function renderInlineHTML(html = '') {
                 return <kbd className="kbd">{domToReact(children, { replace })}</kbd>;
 
             case 'mark':
-                const rawStyle = attribs.style || '';
-                const className = attribs.class || '';
+                const rawStyle = attribs?.style || '';
+                const rawClass = attribs?.class || '';
 
-                const parsedStyle = rawStyle ? rawStyle.split(';').reduce((acc, rule) => {
-                    const [key, value] = rule.split(':').map(s => s.trim());
-                    if (key && value) {
-                        const reactKey = key.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
-                        acc[reactKey] = value;
-                    }
-                    return acc;
-                }, {}) : {};
+                const parsedStyle = rawStyle
+                    .split(';')
+                    .reduce((acc, rule) => {
+                        const [key, value] = rule.split(':').map(s => s.trim());
+                        if (key && value) {
+                            const reactKey = key.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+                            acc[reactKey] = value;
+                        }
+                        return acc;
+                    }, {});
 
+                const classNames = rawClass
+                    .split(/\s+/)
+                    .map(cls => {
+                        const match = cls.match(/^has-([a-z0-9-]+)-color$/i);
+                        return match ? `text-${match[1]}` : null;
+                    })
+                    .filter(Boolean)
+                    .join(' ');
+                    
                 const onlyContainsText = children?.every(
                     child => child.type === 'text' || (child.type === 'tag' && child.name === 'br')
                 );
@@ -84,7 +95,7 @@ export function renderInlineHTML(html = '') {
                     console.warn('<mark> contains unexpected non-text nodes.');
                 }
 
-                return <mark className={className} style={parsedStyle}>
+                return <mark className={classNames} style={parsedStyle}>
                     {domToReact(children)}
                 </mark>;
 

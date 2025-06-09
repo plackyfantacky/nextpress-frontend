@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import { exec } from 'child_process';
 
 dotenv.config(); // Load .env for WP_URL
@@ -29,11 +29,20 @@ async function fetchAllPageBlockJSON() {
     }
   `;
 
+    const proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+    const agent = proxy ? new HttpsProxyAgent(proxy) : undefined;
+
     const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
+        dispatch: agent
     });
+
+    if (!res.ok) {
+        console.error(`❌ Failed to fetch block data: ${res.statusText}`);
+        process.exit(1);
+    }
 
     const json = await res.json();
 
@@ -78,7 +87,7 @@ function extractClassNamesFromBlockJSON(blocksJSON) {
     return Array.from(classNames);
 }
 
-async function main() {
+async function runSafelistBuild() {
     console.log('🔄 Fetching block data...');
     const blockJSONs = await fetchAllPageBlockJSON();
 
@@ -91,13 +100,19 @@ async function main() {
     console.log(`✅ Wrote ${classNames.length} class names to ${outputPath}`);
 }
 
-fs.watch('./src', { recursive: true }, (eventType, filename) => {
-    if (filename.endsWith('.js') || filename.endsWith('.json')) {
-        console.log(`🔄 Detected change in ${filename}, rebuilding safelist...`);
-        exec('npm run safelist');
-    }
-});
+const isWatchMode = process.argv.includes('--watch');
 
+if (isWatchMode) {
+    console.log('👀 Watch mode enabled. Watching for changes in ./src...');
+    const watchExtensions = ['.js', '.jsx', '.json'];
+    fs.watch('./src', { recursive: true }, (eventType, filename) => {
+        if(watchExtensions.some(ext => filename.endsWith(ext))) {
+            console.log(`🔄 Detected change in ${filename}, rebuilding safelist...`);
+            exec('npm run safelist');
+        }
+    });
+}
 
-main();
+runSafelistBuild()
+
 

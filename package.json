@@ -5,12 +5,12 @@
     "type": "module",
     "scripts": {
         "safelist": "node scripts/build-safelist.js",
+        "safelist:watch": "node scripts/build-safelist.js --watch",
         "watch": "concurrently -n 'SAFELIST,NEXT' -c 'yellow.bold,cyan.bold' \"node scripts/build-safelist.js\" \"next dev\" ",
         "dev": "next dev",
         "start": "next start",
         "lint": "next lint",
         "build": "npm run safelist && next build"
-        
     },
     "dependencies": {
         "highlight.js": "^11.11.1",
@@ -23,6 +23,7 @@
         "@tailwindcss/postcss": "^4",
         "concurrently": "^9.1.2",
         "dotenv": "^16.5.0",
+        "https-proxy-agent": "^7.0.6",
         "tailwindcss": "^4"
     }
 }

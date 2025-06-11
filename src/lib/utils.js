@@ -98,6 +98,38 @@ export function extractCiteText(innerContent = []) {
 }
 
 /**
+ * Extracts the content of a <figcaption> element from a given HTML string.
+ * @param {string} html - The HTML string to search within.
+ * @returns {string|null} The content of the <figcaption> element, or null if not found.
+ */
+export function extractFigcaption(html = '') {
+    const match = html.match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/i);
+    return match ? match[1].trim() : null;
+}
+
+/**
+ * Strips the <figcaption> element from a given HTML string.
+ * This is useful for removing captions from figure blocks when only the image or content is needed.
+ * @param {string} html - The HTML string to process.
+ * @returns {string} The HTML string without the <figcaption> element.
+ */
+export function stripFigcaption(html = '') {
+  return html.replace(/<figcaption[^>]*>[\s\S]*?<\/figcaption>/i, '').trim();
+}
+
+/**
+ * Extracts the body content of a <figure> element from a given HTML string.
+ * This is useful for isolating the main content of a figure block, excluding any caption.
+ * @param {string} html - The HTML string to search within.
+ * @returns {string} The body content of the <figure> element, or the original HTML if not found.
+ */
+export function extractFigureBody(html = '') {
+  const match = html.match(/<figure[^>]*>([\s\S]*?)<\/figure>/i);
+  if (!match) return html; // fallback
+  return match[1].trim();
+}
+
+/**
  * Maps quote styles to Tailwind CSS classes.
  * @param {Object} attrs - The attributes of the quote block.
  * @returns {Array} An array of Tailwind CSS classes for the quote block.
@@ -120,6 +152,11 @@ export function mapQuoteStyles(attrs = {}) {
     return classes;
 }
 
+/**
+ * Strips the <p> wrapper from a given HTML string.
+ * @param {string} html - The HTML string to process.
+ * @returns {string} The HTML string without the <p> wrapper.
+ */
 export function stripParagraphWrapper(html = '') {
     return html
         .trim()
@@ -128,6 +165,11 @@ export function stripParagraphWrapper(html = '') {
         .trim();
 }
 
+/**
+ * Strips the heading wrapper from a given HTML string.
+ * @param {string} html - The HTML string to process.
+ * @returns {string} The HTML string without the heading wrapper.
+ */
 export function stripHeadingWrapper(html = '') {
     return html
         .trim()

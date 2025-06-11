@@ -13,6 +13,25 @@ export function renderHighlightedCode(code) {
 }
 
 /**
+ * Converts a CSS style string into a React style object.
+ * @param {string} style - The inline style string.
+ * @returns {object} The parsed style object.
+ */
+export function parseStyleString(style = '') {
+    return style
+        .split(';')
+        .filter(Boolean)
+        .reduce((acc, rule) => {
+            const [key, value] = rule.split(':').map(s => s.trim());
+            if (key && value) {
+                const reactKey = key.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+                acc[reactKey] = value;
+            }
+            return acc;
+        }, {});
+}
+
+/**
  * Decodes HTML entities in a string.
  * @param {string} str - The string to decode.
  * @returns {string} The decoded string.
@@ -50,12 +69,13 @@ export function renderInlineHTML(html = '') {
             case 'span': //extra
                 return React.createElement(name, {}, domToReact(children, { replace }));
 
-            case 'a':
+            case 'a': {
                 return (
                     <a href={attribs.href || '#'} target="_blank" rel="noopener noreferrer">
                         {domToReact(children, { replace })}
                     </a>
                 );
+            }
 
             case 'code':
                 return <code className="inline-code">{domToReact(children, { replace })}</code>;
@@ -63,20 +83,12 @@ export function renderInlineHTML(html = '') {
             case 'kbd':
                 return <kbd className="kbd">{domToReact(children, { replace })}</kbd>;
 
-            case 'mark':
+            case 'mark': {
+
                 const rawStyle = attribs?.style || '';
                 const rawClass = attribs?.class || '';
 
-                const parsedStyle = rawStyle
-                    .split(';')
-                    .reduce((acc, rule) => {
-                        const [key, value] = rule.split(':').map(s => s.trim());
-                        if (key && value) {
-                            const reactKey = key.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
-                            acc[reactKey] = value;
-                        }
-                        return acc;
-                    }, {});
+                const parsedStyle = parseStyleString(rawStyle)
 
                 const classNames = rawClass
                     .split(/\s+/)
@@ -98,16 +110,40 @@ export function renderInlineHTML(html = '') {
                 return <mark className={classNames} style={parsedStyle}>
                     {domToReact(children)}
                 </mark>;
+            }
 
-            case 'img':
-                return (
+            case 'img': {
+                const { src, alt = '', class: rawClass = '', style: rawStyle = ''} = attribs;
+                const parsedStyle = parseStyleString(rawStyle);
+
+                const img = (
                     <img
-                        src={attribs.src}
-                        alt={attribs.alt || ''}
-                        className="inline-image"
-                        style={{ display: 'inline', maxHeight: '1em', verticalAlign: 'middle' }}
+                        src={src}
+                        alt={alt}
+                        className={rawClass || `inline-image `}
+                        style={ parsedStyle || {
+                            display: 'inline',
+                            maxHeight: '1em',
+                            verticalAlign: 'middle'
+                        }}
                     />
                 );
+
+                if(this?.options?.context?.lightbox && src) {
+                    return (
+                        <a 
+                            href={src}
+                            data-lightbox="gallery"
+                            data-src={src}
+                            className="lightbox"
+                        >
+                            {img}
+                        </a>
+                    );
+                }
+
+                return img;
+            }
 
             case 'sup':
                 // Handle footnotes like: <sup><a href="#fn1" id="fnref1">1</a></sup>

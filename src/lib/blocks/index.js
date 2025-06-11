@@ -5,7 +5,8 @@ const blockRenderers = {
     'core/group': () => import('./blockGroup'),
     'core/columns': () => import('./blockColumns'),
     'core/column': () => import('./blockColumn'),
-    //'core/image': () => import('./blockImage'),
+    'core/image': () => import('./blockImage'),
+    'core/post-title': () => import('./blockPostTitle'),
     'core/heading': () => import('./blockHeading'),
     'core/paragraph': () => import('./blockParagraph'),
 
@@ -47,8 +48,6 @@ export async function renderBlock(block, keyPrefix = 'block', postContext = {}) 
 
     const children = await renderBlocksRecursively(innerBlocks, keyPrefix, postContext);
     const { default: Component } = await renderer();
-
-    console.log('extractedClassNames:', extractedClassNames);
 
     return (
         <Component

@@ -1,14 +1,13 @@
 import React from "react";
 import { joinClassNames } from "../utils";
-import { generateBlockClassNames } from "../generateBlockClassNames";
+
 
 export default function BlockPostTitle({ block, keyPrefix, postContext }) {
-    const { attrs = {}} = block;
+    const { attrs = {}, blockName = '', normalizedClassNames = '' } = block;
 
     const {
         level = 2,
         isLink = false,
-        classNames = '', //explicably set by the user in the editor
         rel = '',
         linkTarget = '',
     } = attrs;
@@ -19,11 +18,9 @@ export default function BlockPostTitle({ block, keyPrefix, postContext }) {
         <a href={postContext?.postUrl || '#'} {...(rel ? { rel } : {})} {...(linkTarget ? { target: linkTarget } : {})}>{title}</a>
     ) : title;
 
-    const tailwindClasses = generateBlockClassNames(block);
-
-    const finalClassNames = joinClassNames('post-title', tailwindClasses, classNames);
+    const blockClassNames = joinClassNames(blockName, normalizedClassNames);
 
     return (
-        <Tag key={keyPrefix} className={`${finalClassNames}`}>{titleNode}</Tag>
+        <Tag key={keyPrefix} className={blockClassNames}>{titleNode}</Tag>
     );
 }

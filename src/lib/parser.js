@@ -52,6 +52,11 @@ export function decodeHTMLEntities(encoded = '') {
         .replace(/&#39;/g, "'");
 }
 
+/**
+ * Renders inline HTML content into React elements.
+ * @param {string} html - The HTML string to parse.
+ * @returns {ReactNode} The parsed React elements.
+ */
 export function renderInlineHTML(html = '') {
     const replace = (node) => {
         if (node.type !== 'tag') return;
@@ -115,11 +120,6 @@ export function renderInlineHTML(html = '') {
             case 'img': {
                 const { src, alt = '', title = '', style: rawStyle = ''} = attribs;
                 const parsedStyle = parseStyleString(rawStyle);
-
-                // const objectFit = this?.options?.context?.imageAttrs?.scale;
-                // if(objectFit === 'cover' || objectFit === 'contain') {
-                //     parsedStyle.objectFit = objectFit;
-                // }
 
                 const img = (
                     <img

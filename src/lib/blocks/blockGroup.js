@@ -2,30 +2,31 @@ import React from "react";
 import { joinClassNames, withConditionalInnerWrapper } from "../utils";
 
 export default function BlockGroup({ block, keyPrefix, children }) {
-    const { attrs = {}, blockClassName = '', innerHTML = '' } = block;
+    const { attrs = {}, blockName = '', normalizedClassNames = '', innerHTML = '' } = block;
+
     const {
         layout = {},
         tagName = 'div',
-        className = '' //explicably set by the user in the editor
     } = attrs;
 
     const type = layout.type || 'default';
     const orientation = type === 'flex' ? layout.orientation || 'horizontal' : undefined;
 
-    let layoutClass = '';
-    let computedClassName = blockClassName;
+    let layoutClassName = '', layoutBlockName = '';
 
     if (type === 'flex') {
-        computedClassName = orientation === 'horizontal' ? 'row-block' : 'stack-block';
-        layoutClass = orientation === 'horizontal' ? 'flex flex-row' : 'flex flex-col';
+        layoutBlockName = orientation === 'horizontal' ? 'row-block' : 'stack-block';
+        layoutClassName = orientation === 'horizontal' ? 'flex flex-row' : 'flex flex-col';
+    } else {
+        layoutBlockName = 'group-block';  
     }
 
     const Tag = tagName || 'div';
-    const finalClassNames = joinClassNames(computedClassName, layoutClass, className);
+    const blockClassNames = joinClassNames(normalizedClassNames, layoutBlockName, layoutClassName);
 
     return (
-        <Tag key={keyPrefix} className={finalClassNames} >
-            {withConditionalInnerWrapper(children, innerHTML, blockClassName)}
+        <Tag key={keyPrefix} className={blockClassNames} >
+            {withConditionalInnerWrapper(children, innerHTML, blockName)}
         </Tag>
     );
 }

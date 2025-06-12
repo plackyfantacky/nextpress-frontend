@@ -1,10 +1,12 @@
-import {extractTextFromTag, normalizeClassNames, normalizeBlockName } from '../utils';
+import React from 'react';
+import {extractTextFromTag, extractAttributeValue, normalizeClassNames, convertBlockNames as convertBlockNames } from '../utils';
 
 const blockRenderers = {
     'core/cover': () => import('./blockCover'),
     'core/group': () => import('./blockGroup'),
     'core/columns': () => import('./blockColumns'),
     'core/column': () => import('./blockColumn'),
+    'core/media-text': () => import('./blockMediaText'),
     'core/image': () => import('./blockImage'),
     'core/post-title': () => import('./blockPostTitle'),
     'core/heading': () => import('./blockHeading'),
@@ -31,42 +33,55 @@ export function parseBlocks(blockData) {
     }
 }
 
+/**
+ * Renders a single block component based on its type.
+ * @param {Object} block - The block data to render.
+ * @param {string} keyPrefix - A prefix for the key of the rendered component.
+ * @param {Object} postContext - Context for the post, if needed.
+ * @returns {Promise<React.Component|null>} A React component representing the block, or null if not handled.
+ */
 export async function renderBlock(block, keyPrefix = 'block', postContext = {}) {
-    const { attrs = {}, blockName, innerBlocks = [], innerHTML } = block;
-    if (!blockName && (!innerHTML || innerHTML.trim() === '')) { return null; }
+    let { blockName, innerBlocks = [], innerHTML } = block;
+    if (!blockName && (!innerHTML || innerHTML.trim() === '')) { return null; };
 
-    const rawClass = extractTextFromTag(innerHTML, 'class');
-    const normalizedClassNames = normalizeClassNames(`${rawClass} ${attrs?.className || ''}`);
+    const rawClass = extractAttributeValue({ html: innerHTML, attribute: 'class'});
+    const normalizedClassNames = normalizeClassNames(rawClass);
     
-    const blockClassName = normalizeBlockName(blockName);
+    blockName = convertBlockNames(blockName);
+    const renderer = blockRenderers[blockName];
+
+    console.log('blockName', blockName);
     
-    // renderer becomes a function (imported dynamically) that returns a React component.
-    const renderer = blockRenderers[blockName]; //still need to reference the WP block name here.
 
     if (!renderer) {
         console.warn(`Unhandled block type: ${blockName}`);
         return null;
     }
 
-    const children = await renderBlocksRecursively(innerBlocks, keyPrefix, postContext);
+    const children = await renderBlocksRecursively({blocks: innerBlocks, keyPrefix: keyPrefix, postContext: postContext});
     const { default: Component } = await renderer();
 
     return (
         <Component
-            key={keyPrefix}
-            keyPrefix={`${keyPrefix}-${Math.random().toString(36).substring(2, 8)}`}
-            block={{ ...block, blockClassName, normalizedClassNames }}
+            keyPrefix={`${keyPrefix}-${Math.random().toString(36).substring(2, 8)}`} // to pass to children
+            block={{ ...block, blockName, normalizedClassNames }}
             postContext={postContext}
             children={children}
         />
     );
-
 }
 
-export async function renderBlocksRecursively(blocks, keyPrefix, postContext) {
+/**
+ * Recursively renders an array of blocks.
+ * @param {Array} blocks - The array of blocks to render.
+ * @param {string} keyPrefix - A prefix for the keys of the rendered components.
+ * @param {Object} postContext - Context for the post, if needed.
+ * @returns {Promise<Array>} An array of rendered block components.
+ */
+export async function renderBlocksRecursively({blocks, keyPrefix, postContext}) {
     const rendered = await Promise.all(
         blocks.map((block, i) =>
-            renderBlock(block, `${keyPrefix}-${i}`, postContext)
+            renderBlock({block: block, keyPrefix: `${keyPrefix}-${i}`, postContext: postContext})
         )
     );
     return rendered.filter(Boolean);

@@ -27,11 +27,11 @@ export default async function Page(props) {
     );
     const t1 = performance.now();
     
-    console.log(`🕓 Rendered ${blocks.length} blocks in ${t1 - t0} ms`);
+    //console.log(`🕓 Rendered ${blocks.length} blocks in ${t1 - t0} ms`);
 
     return (
         <>
-            <PerformanceMarker />
+            {/* <PerformanceMarker /> */}
             {renderedBlocks}
         </>
     );

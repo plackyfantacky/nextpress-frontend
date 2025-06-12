@@ -63,3 +63,15 @@ export async function getPageBySlug(slug) {
     );
     return data?.page || null;
 }
+
+export async function getHomePageBlocks() {
+    const data  = await fetchAPI(`
+        query GetHomePage {
+            page(id: "home", idType: URI) {
+                blocksJSON
+            }
+        }`,
+    );
+
+    return data?.page?.blocksJSON || [];
+}

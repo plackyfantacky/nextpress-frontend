@@ -10,11 +10,11 @@
         "start": "next start",
         "lint": "next lint",
         "build": "npm run safelist && next build"
-        
     },
     "dependencies": {
         "highlight.js": "^11.11.1",
         "html-react-parser": "^5.2.5",
+        "micromodal": "^0.6.1",
         "next": "15.3.3",
         "react": "^19.0.0",
         "react-dom": "^19.0.0"

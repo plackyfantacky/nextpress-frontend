@@ -74,7 +74,7 @@ export default function BlockCover({ block, keyPrefix, postContext, children }) 
             )}
             <span aria-hidden="true" className={overlayClasses} style={overlayStyle} />
 
-            {withConditionalInnerWrapper(children, innerHTML, blockClassName)}
+            {withConditionalInnerWrapper(children, innerHTML, blockClassName, 'z-20 relative')}
         </Tag>
     );
 }

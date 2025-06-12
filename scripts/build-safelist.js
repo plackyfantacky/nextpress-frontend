@@ -62,6 +62,16 @@ function extractClassNamesFromBlockJSON(blocksJSON) {
                     .forEach(cls => classNames.add(cls));
             }
 
+            // Extract style="width: ..." from innerHTML
+            const styleMatches = innerHTML.match(/style="([^"]+)"/g) || [];
+            for (const styleMatch of styleMatches) {
+                const styleContent = styleMatch.replace(/^style="/, '').replace(/"$/, '');
+                const widthMatch = styleContent.match(/width:\s*([\d.]+(px|rem|em|%)?)/);
+                if (widthMatch) {
+                    classNames.add(`w-[${widthMatch[1]}]`);
+                }
+            }
+
             walk(innerBlocks);
         }
     }
@@ -75,7 +85,14 @@ function extractClassNamesFromBlockJSON(blocksJSON) {
         }
     }
 
-    return Array.from(classNames);
+    return Array.from(classNames).filter(cls => {
+        return !/^wp-image-\d+$/.test(cls) &&
+            !/^wp-block-/.test(cls) &&
+            !/^wp-element-/.test(cls) &&
+            !/^has-[\w-]+(-(color|background-color|font-size|dim|gradient|border-color|text-align))?$/.test(cls) &&
+            !/^align(left|right|center|wide|full)$/.test(cls) &&
+            !/^is-/.test(cls);
+    });
 }
 
 async function main() {

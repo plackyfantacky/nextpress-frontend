@@ -3,7 +3,7 @@ import { joinClassNames } from "../utils";
 import { generateBlockClassNames } from "../generateBlockClassNames";
 
 export default function BlockPostTitle({ block, keyPrefix, postContext }) {
-    const { attrs = {}, blockClassName = '', extractedClassNames = '', innerHTML } = block;
+    const { attrs = {}} = block;
 
     const {
         level = 2,

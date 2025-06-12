@@ -1,22 +1,56 @@
 /**
- * Extract the text content and css classes from a given string of innerHTML.
- * @param {string} innerHTML - The HTML string to extract from.
- * @returns {Object} An object containing the text content, block class name (first css class) and remaining css classes.
+ * Normalizes a list of class names by removing duplicates, filtering out WordPress-specific classes,
+ * and converting WordPress-style classes to Tailwind CSS equivalents.
+ * @param {string} classList - The class list string to normalize.
+ * @param {Object} options - Options for normalization.
+ * @param {boolean} options.convert - Whether to convert WordPress-style classes to Tailwind CSS equivalents.
+ * @returns {string} A normalized class list string suitable for use with Tailwind CSS.
  */
-export function extractTextAndClasses(innerHTML) {
-    if (typeof innerHTML !== 'string') { return { text: '', classNames: '' }; }
+export function normalizeClassNames(classList = '', { convert = true } = {}) {
+    const seen = new Set();
 
-    // Parse the first tag in the string
-    const match = innerHTML.match(/<[^>]+class\s*=\s*["']([^"']+)["']/i);
-    const extractedClassNames = match?.[1] ?? '';
-    const text = innerHTML.replace(/<[^>]+>/g, '').trim();
-
-    // Remove WordPress-injected utility classes
-    const filteredClasses = extractedClassNames
+    return classList
         .split(/\s+/)
-        .filter(cls => !cls.startsWith('wp-'));
+        .filter(Boolean)
+        .filter(cls => {
+            if (seen.has(cls)) return false;
+            seen.add(cls);
 
-    return { text, extractedClassNames: filteredClasses.join(' ') };
+            // Always remove WP core block prefix
+            if (cls.startsWith('wp-block-')) return false;
+
+            // Remove obvious defaults/redundancy
+            if (cls === 'is-style-default') return false;
+
+            return true;
+        })
+        .map(cls => {
+            if (!convert) return cls;
+
+            // Convert WP-style color background
+            if (cls.startsWith('has-') && cls.endsWith('-background-color')) {
+                const color = cls.replace('has-', '').replace('-background-color', '');
+                return `bg-${color}`;
+            }
+
+            // Convert WP-style font sizes
+            if (cls.startsWith('has-') && cls.endsWith('-font-size')) {
+                const size = cls.replace('has-', '').replace('-font-size', '');
+                return `text-${size}`;
+            }
+
+            // Convert WP-style text colors
+            if (cls.startsWith('has-') && cls.endsWith('-color')) {
+                const color = cls.replace('has-', '').replace('-color', '');
+                return `text-${color}`;
+            }
+
+            // Generic has-background
+            if (cls === 'has-background') return 'bg-opacity-100';
+
+            return cls;
+        })
+        .join(' ');
 }
 
 /**
@@ -72,39 +106,24 @@ export function joinClassNames(...args) {
  * This is useful for blocks that require a specific inner structure.
  * @param {ReactNode} children - The children to wrap.
  * @param {string} innerHTML - The innerHTML string to check for the "inner" class.
+ * @param {string} blockName - The name of the block, used to generate a specific class suffix.
+ * @param {string} additionalClasses - Additional classes to apply to the inner div. use rarely.
  * @returns {ReactNode} The children wrapped in a div with class "inner" if applicable.
  */
-export function withConditionalInnerWrapper(children, innerHTML = '', blockName = '') {
+export function withConditionalInnerWrapper(children, innerHTML = '', blockName = '', additionalClasses = '') {
     const hasInner = innerHTML.includes('class="inner"') || innerHTML.includes("class='inner'");
     const blockSuffix = blockName ? `${blockName.replace('-block', '')}-inner` : '';
-    const innerClasses = hasInner ? `${blockSuffix} inner`.trim() : '';
+    let innerClasses = hasInner ? `${blockSuffix} inner`.trim() : '';
 
-    return hasInner
-        ? <div className={innerClasses}>{children}</div>
-        : children;
-}
+    if (additionalClasses) {
+        const classNames = hasInner ? `${innerClasses} ${additionalClasses}` : additionalClasses;
+        return <div className={classNames}>{children}</div>;
+    } else {
+        return hasInner
+            ? <div className={innerClasses}>{children}</div>
+            : children;
+    }
 
-/**
- * Extracts the text content from a <cite> element within a block's innerHTML.
- * @param {string} html - The HTML string to search within.
- * @returns {string|null} The text content of the <cite> element, or null if not found.
- */
-export function extractCiteText(innerContent = []) {
-    const citeHTML = innerContent.find(
-        (s) => typeof s === 'string' && s.includes('<cite')
-    );
-    const match = citeHTML?.match(/<cite[^>]*>(.*?)<\/cite>/i);
-    return match?.[1]?.trim() || null;
-}
-
-/**
- * Extracts the content of a <figcaption> element from a given HTML string.
- * @param {string} html - The HTML string to search within.
- * @returns {string|null} The content of the <figcaption> element, or null if not found.
- */
-export function extractFigcaption(html = '') {
-    const match = html.match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/i);
-    return match ? match[1].trim() : null;
 }
 
 /**
@@ -114,7 +133,7 @@ export function extractFigcaption(html = '') {
  * @returns {string} The HTML string without the <figcaption> element.
  */
 export function stripFigcaption(html = '') {
-  return html.replace(/<figcaption[^>]*>[\s\S]*?<\/figcaption>/i, '').trim();
+    return html.replace(/<figcaption[^>]*>[\s\S]*?<\/figcaption>/i, '').trim();
 }
 
 /**
@@ -124,32 +143,63 @@ export function stripFigcaption(html = '') {
  * @returns {string} The body content of the <figure> element, or the original HTML if not found.
  */
 export function extractFigureBody(html = '') {
-  const match = html.match(/<figure[^>]*>([\s\S]*?)<\/figure>/i);
-  if (!match) return html; // fallback
-  return match[1].trim();
+    const match = html.match(/<figure[^>]*>([\s\S]*?)<\/figure>/i);
+    if (!match) return html; // fallback
+    return match[1].trim();
 }
 
 /**
- * Maps quote styles to Tailwind CSS classes.
- * @param {Object} attrs - The attributes of the quote block.
- * @returns {Array} An array of Tailwind CSS classes for the quote block.
+ * Extracts the class attribute from a <figure> element in a given HTML string.
+ * This is useful for identifying the classes applied to a figure block, which can then be normalized or transformed.
+ * @param {string} html - The HTML string to search within.
+ * @returns {string} The class attribute value of the <figure> element, or an empty string if not found.
  */
-export function mapQuoteStyles(attrs = {}) {
-    const classes = [];
+export function extractFigureClass(html = '') {
+    return html.match(/<figure[^>]*class="([^"]+)"/i)?.[1] || '';
+}
 
-    if (attrs.backgroundColor) {
-        classes.push(`bg-${attrs.backgroundColor}`);
-    }
+/**
+ * Extracts the class attribute from a <figure> element in a given HTML string.
+ * This is useful for identifying the classes applied to a figure block, which can then be normalized or transformed.
+ * @param {string} html - The HTML string to search within.
+ * @returns {string} The class attribute value of the <figure> element, or an empty string if not found.
+ */
+export function extractFigureStyle(html = '') {
+    return html.match(/<figure[^>]*style="([^"]+)"/i)?.[1] || '';
+}
 
-    if (attrs.textColor) {
-        classes.push(`text-${attrs.textColor}`);
-    }
+/**
+ * Normalizes the class list of a figure element by removing duplicates and converting WordPress-specific classes to Tailwind CSS equivalents.
+ * @param {string} classList - The class list string to normalize.
+ * @returns {string} A normalized class list string suitable for use with Tailwind CSS.
+ * This function filters out WordPress-specific classes like 'wp-block-image' and 'is-resized', and converts alignment and size classes to Tailwind equivalents.
+ */
+export function normalizeFigureClasses(classList = '') {
+    const seen = new Set();
+    const classNames = classList.split(/\s+/);
 
-    if (attrs.fontSize) {
-        classes.push(`text-${attrs.fontSize}`);
-    }
+    return classNames
+        .filter(cls => {
+            if (['wp-block-image', 'is-resized'].includes(cls)) return false; // Exclude WordPress-specific classes
 
-    return classes;
+            if (seen.has(cls)) return false; // Filter out duplicates
+            seen.add(cls);
+            return true; // Keep unique classes
+        })
+        .map(cls => {
+            // Convert known WP classes to Tailwind equivalents
+            if (cls.startsWith('align')) {
+                const align = cls.replace('align', '');
+                if (align === 'left') return 'float-left mr-4 mb-4';
+                if (align === 'right') return 'float-right ml-4 mb-4';
+                if (align === 'center') return 'mx-auto';
+            }
+            if (cls.startsWith('size-')) {
+                return `media-${cls.slice(5)}`; //only used as an identifier, not a class
+            }
+            return cls; // Return the class as is if no transformation is needed
+        })
+        .join(' ');
 }
 
 /**
@@ -176,4 +226,46 @@ export function stripHeadingWrapper(html = '') {
         .replace(/^<h[1-6][^>]*>/i, '')
         .replace(/<\/h[1-6]>$/i, '')
         .trim();
+}
+
+/**
+ * Parses the width from a CSS style string.
+ * @param {string} style - The CSS style string to parse.
+ * @returns {string|null} The width value if found, otherwise null.
+ */
+export function parseWidthFromStyle(style = '') {
+    const match = style.match(/width\s*:\s*([0-9.]+[a-z%]*)/i);
+    return match ? match[1] : null;
+}
+
+/**
+ * Extracts the text content from a specific HTML tag.
+ * @param {string} html - The HTML string to search within.
+ * @param {string} tag - The tag name to extract text from (e.g., 'p', 'div').
+ * @returns {string|null} The text content of the specified tag, or null if not found.
+ */
+export function extractTextFromTag(html = '', tag = '') {
+    const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i');
+    const match = html.match(regex);
+    return match ? match[1].trim() : null;
+}
+
+/**
+ * Extracts the value of a specific attribute from an HTML string.
+ * @param {string} html - The HTML string to search within.
+ * @param {string} attribute - The attribute name to extract (e.g., 'src', 'href').
+ * @param {string|optional} tag - The tag name to search for (e.g., 'img', 'a').
+ * @returns {string|null} The value of the specified attribute, or null if not found.
+ */
+export function extractAttributeValue({html = '', tag = '', attribute = ''} = {}) {
+    if (!html || !attribute) return null;
+
+    const pattern = tag
+        ? `<${tag}[^>]*\\s${attribute}\\s*=\\s*"([^"]*)"`
+        : `${attribute}\\s*=\\s*"([^"]*)"`;
+
+    const regex = new RegExp(pattern, 'i');
+    const match = html.match(regex);
+
+    return match ? match[1] : null;
 }

@@ -1,7 +1,7 @@
 import React from "react";
 import { joinClassNames, withConditionalInnerWrapper } from "../utils";
 
-export default function BlockGroup({ block, keyPrefix, postContext, children }) {
+export default function BlockGroup({ block, keyPrefix, children }) {
     const { attrs = {}, blockClassName = '', innerHTML = '' } = block;
     const {
         layout = {},

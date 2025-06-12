@@ -1,7 +1,7 @@
 import React from "react";
 import { joinClassNames, withConditionalInnerWrapper } from "../utils";
 
-export default function BlockColumn({ block, keyPrefix, postContext, children }) {
+export default function BlockColumn({ block, keyPrefix, children }) {
     const { attrs, blockClassName, innerHTML } = block;
     const {
         tagName = 'div',

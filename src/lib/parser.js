@@ -113,14 +113,20 @@ export function renderInlineHTML(html = '') {
             }
 
             case 'img': {
-                const { src, alt = '', class: rawClass = '', style: rawStyle = ''} = attribs;
+                const { src, alt = '', title = '', style: rawStyle = ''} = attribs;
                 const parsedStyle = parseStyleString(rawStyle);
+
+                // const objectFit = this?.options?.context?.imageAttrs?.scale;
+                // if(objectFit === 'cover' || objectFit === 'contain') {
+                //     parsedStyle.objectFit = objectFit;
+                // }
 
                 const img = (
                     <img
                         src={src}
                         alt={alt}
-                        className={rawClass || `inline-image `}
+                        {...title ? { title} : {}}
+                        className="image-itself"
                         style={ parsedStyle || {
                             display: 'inline',
                             maxHeight: '1em',
@@ -131,12 +137,7 @@ export function renderInlineHTML(html = '') {
 
                 if(this?.options?.context?.lightbox && src) {
                     return (
-                        <a 
-                            href={src}
-                            data-lightbox="gallery"
-                            data-src={src}
-                            className="lightbox"
-                        >
+                        <a href={src} data-lightbox="gallery" data-src={src} className="lightbox">
                             {img}
                         </a>
                     );

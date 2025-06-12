@@ -1,4 +1,4 @@
-import { extractTextAndClasses, normalizeBlockName } from '../utils';
+import {extractTextFromTag, normalizeClassNames, normalizeBlockName } from '../utils';
 
 const blockRenderers = {
     'core/cover': () => import('./blockCover'),
@@ -9,7 +9,7 @@ const blockRenderers = {
     'core/post-title': () => import('./blockPostTitle'),
     'core/heading': () => import('./blockHeading'),
     'core/paragraph': () => import('./blockParagraph'),
-
+    'core/quote': () => import('./blockQuote'),
 
     // Add other block renderers here
 };
@@ -32,10 +32,12 @@ export function parseBlocks(blockData) {
 }
 
 export async function renderBlock(block, keyPrefix = 'block', postContext = {}) {
-    const { blockName, innerBlocks = [], innerHTML } = block;
+    const { attrs = {}, blockName, innerBlocks = [], innerHTML } = block;
     if (!blockName && (!innerHTML || innerHTML.trim() === '')) { return null; }
 
-    const { text, extractedClassNames } = extractTextAndClasses(innerHTML);
+    const rawClass = extractTextFromTag(innerHTML, 'class');
+    const normalizedClassNames = normalizeClassNames(`${rawClass} ${attrs?.className || ''}`);
+    
     const blockClassName = normalizeBlockName(blockName);
     
     // renderer becomes a function (imported dynamically) that returns a React component.
@@ -53,7 +55,7 @@ export async function renderBlock(block, keyPrefix = 'block', postContext = {}) 
         <Component
             key={keyPrefix}
             keyPrefix={`${keyPrefix}-${Math.random().toString(36).substring(2, 8)}`}
-            block={{ ...block, blockClassName, extractedClassNames, text }}
+            block={{ ...block, blockClassName, normalizedClassNames }}
             postContext={postContext}
             children={children}
         />

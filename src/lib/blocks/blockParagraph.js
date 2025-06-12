@@ -4,7 +4,7 @@ import { renderInlineHTML } from "../parser";
 import { generateBlockClassNames } from "../generateBlockClassNames";
 
 export default function BlockParagraph({ block, keyPrefix }) {
-    const { attrs = {}, blockClassName = '', extractedClassNames = '', innerHTML } = block;
+    const { attrs = {}, blockClassName = '', innerHTML } = block;
     const { classNames = '' } = attrs;
 
     const tailwindClasses = generateBlockClassNames(block);

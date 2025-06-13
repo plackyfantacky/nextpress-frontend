@@ -17,14 +17,19 @@ export default async function Page(props) {
         postSlug: page.slug,
         postImage: page.featuredImage?.node?.sourceUrl,
     };
-
+    
+    
     const blocks = parseBlocks(page.blocksJSON);
     if (!blocks || blocks.length === 0) return <div>No content available</div>;
+    
+    
 
     const t0 = performance.now();
-    const renderedBlocks = blocks.map((block, i) =>
+    const renderedBlocks = blocks.map((block, i) => {
         renderBlock(block, `block-${i}`, postContext)
-    );
+
+        //console.log('block', block, 'keyPrefix', `block-${i}`, 'postContext', postContext);
+    });
     const t1 = performance.now();
     
     //console.log(`🕓 Rendered ${blocks.length} blocks in ${t1 - t0} ms`);

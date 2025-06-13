@@ -1,5 +1,6 @@
+// ./lib/blocks/index.js
 import React from 'react';
-import {extractTextFromTag, extractAttributeValue, normalizeClassNames, convertBlockNames as convertBlockNames } from '../utils';
+import { extractTextFromTag, extractAttributeValue, normalizeClassNames, convertBlockNames as convertBlockNames } from '../utils';
 
 const blockRenderers = {
     'core/cover': () => import('./blockCover'),
@@ -46,12 +47,12 @@ export async function renderBlock(block, keyPrefix = 'block', postContext = {}) 
 
     const rawClass = extractAttributeValue({ html: innerHTML, attribute: 'class'});
     const normalizedClassNames = normalizeClassNames(rawClass);
-    
+
     blockName = convertBlockNames(blockName);
     const renderer = blockRenderers[blockName];
 
     console.log('blockName', blockName);
-    
+
 
     if (!renderer) {
         console.warn(`Unhandled block type: ${blockName}`);

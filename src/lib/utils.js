@@ -51,14 +51,36 @@ export function normalizeClassNames(classList = '', { convert = true } = {}) {
                 return `bg-${color}`;
             }
 
+            // Convert WP has-text-align-{alignment} to Tailwind CSS text alignment classes
+            if (cls.startsWith('has-text-align-')) {
+                const alignment = cls.replace('has-text-align-', '');
+                if (alignment === 'left') return 'text-left';
+                if (alignment === 'right') return 'text-right';
+                if (alignment === 'center') return 'text-center';
+                if (alignment === 'justify') return 'text-justify';
+            }
+
             // Convert WP-style font sizes
             if (cls.startsWith('has-') && cls.endsWith('-font-size')) {
                 //check if the value already starts with "text-", if so, return without "has-" and "-font-size"
 
+                let size
+
                 if (cls.startsWith('has-text-')) {
-                    return cls.replace('has-', '').replace('-font-size', '');
+                    size = cls.replace('has-text-', '').replace('-font-size', '');
                 }
-                const size = cls.replace('has-', '').replace('-font-size', '');
+                size = cls.replace('has-', '').replace('-font-size', '');
+                // Map WP font sizes to Tailwind CSS equivalents
+                const sizeMap = {
+                    'small': 'sm',
+                    'medium': 'base',
+                    'large': 'lg',
+                    'x-large': 'xl',
+                    'xx-large': '2xl',
+                    'huge': '3xl',
+                    // Add more mappings as needed
+                };
+                size = sizeMap[size] || size; // Default to the original size if not found
                 return `text-${size}`;
             }
 
@@ -89,8 +111,9 @@ export function normalizeClassNames(classList = '', { convert = true } = {}) {
                 if (direction === 'bottom') return 'items-end';
             }
 
-            //Convert WP is-stacked-on-mobile to sm:flex-col
+            //Convert WP is-(not-)stacked-on-mobile to sm:flex-col
             if (cls === 'is-stacked-on-mobile') return 'sm:flex-col';
+            if (cls === 'is-not-stacked-on-mobile') return 'sm:flex-row';
 
             // Convert WP alignments to Tailwind CSS float classes
             if (cls.startsWith('align')) {

@@ -84,7 +84,21 @@ function extractClassNamesFromBlockJSON(blocksJSON) {
         }
     }
 
-    return Array.from(classNames);
+    const colorTokens = extractTailwindColorTokens('./src/app/global.css');
+    for (const token of colorTokens) {
+        classNames.add(`bg-${token}`);
+        classNames.add(`text-${token}`);
+        classNames.add(`border-${token}`);
+    }
+
+    return Array.from(classNames).filter(cls => {
+        return !/^wp-image-\d+$/.test(cls) &&
+            !/^wp-block-/.test(cls) &&
+            !/^wp-element-/.test(cls) &&
+            !/^has-[\w-]+(-(color|background-color|font-size|dim|gradient|border-color|text-align))?$/.test(cls) &&
+            !/^align(left|right|center|wide|full)$/.test(cls) &&
+            !/^is-/.test(cls);
+    });
 }
 
 function extractTailwindColorTokens(cssPath) {
@@ -108,13 +122,6 @@ async function runSafelistBuild() {
 
     console.log(`🔍 Processing ${blockJSONs.length} pages...`);
     const classNames = extractClassNamesFromBlockJSON(blockJSONs);
-
-    const colorTokens = extractTailwindColorTokens('./src/app/global.css');
-    for (const token of colorTokens) {
-        classNames.add(`bg-${token}`);
-        classNames.add(`text-${token}`);
-        classNames.add(`border-${token}`);
-    }
 
     const outputPath = path.resolve('./tailwind.safelist.json');
     fs.writeFileSync(outputPath, JSON.stringify(classNames, null, 2));

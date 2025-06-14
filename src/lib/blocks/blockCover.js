@@ -10,6 +10,7 @@ export default function BlockCover({ block, keyPrefix, postContext, children }) 
         alt,
         url = '', // this is the image URL, if not using featured image
         useFeaturedImage = false,
+        customOverlayColor = '', // this is not output in innerHTML, so process it directly
         dimRatio = 50, // append to bg- classes
         focalPoint = { x: 0.5, y: 0.5 },
         contentPosition = 'center center', // this is not output in innerHTML, so process it directly
@@ -60,6 +61,8 @@ export default function BlockCover({ block, keyPrefix, postContext, children }) 
         'absolute inset-0 z-[1] pointer-events-none',
     );
 
+    const blockOverlayStyle = customOverlayColor ? { backgroundColor: customOverlayColor } : {};
+
     const blockContentClasses = joinClassNames(
         'cover-content',
          'flex flex-col relative z-[2]',
@@ -69,7 +72,7 @@ export default function BlockCover({ block, keyPrefix, postContext, children }) 
     return (
         <Tag key={keyPrefix} className={blockContainerClasses} {...(blockContainerStyle ? { style: blockContainerStyle } : {})} {...( idAttribute ? { id: idAttribute } : {} )}>
             <div role="img" aria-label={alt || ''} className={blockImageClasses} {...(blockImageStyle ? { style: blockImageStyle } : {})} />
-            <span aria-hidden="true" className={blockOverlayClasses} />
+            <span aria-hidden="true" className={blockOverlayClasses} {...(blockOverlayStyle ? { style: blockOverlayStyle } : {})} />
             {withConditionalInnerWrapper(children, innerHTML, blockClassName, blockContentClasses)}
         </Tag>
     );

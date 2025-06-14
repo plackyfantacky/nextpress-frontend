@@ -71,6 +71,16 @@ function extractClassNamesFromBlockJSON(blocksJSON) {
                     .forEach(cls => classNames.add(cls));
             }
 
+            // Extract style="width: ..." from innerHTML
+            const styleMatches = innerHTML.match(/style="([^"]+)"/g) || [];
+            for (const styleMatch of styleMatches) {
+                const styleContent = styleMatch.replace(/^style="/, '').replace(/"$/, '');
+                const widthMatch = styleContent.match(/width:\s*([\d.]+(px|rem|em|%)?)/);
+                if (widthMatch) {
+                    classNames.add(`w-[${widthMatch[1]}]`);
+                }
+            }
+
             walk(innerBlocks);
         }
     }
@@ -84,13 +94,6 @@ function extractClassNamesFromBlockJSON(blocksJSON) {
         }
     }
 
-    const colorTokens = extractTailwindColorTokens('./src/app/global.css');
-    for (const token of colorTokens) {
-        classNames.add(`bg-${token}`);
-        classNames.add(`text-${token}`);
-        classNames.add(`border-${token}`);
-    }
-
     return Array.from(classNames).filter(cls => {
         return !/^wp-image-\d+$/.test(cls) &&
             !/^wp-block-/.test(cls) &&
@@ -98,22 +101,7 @@ function extractClassNamesFromBlockJSON(blocksJSON) {
             !/^has-[\w-]+(-(color|background-color|font-size|dim|gradient|border-color|text-align))?$/.test(cls) &&
             !/^align(left|right|center|wide|full)$/.test(cls) &&
             !/^is-/.test(cls);
-    });
-}
-
-function extractTailwindColorTokens(cssPath) {
-    const css = fs.readFileSync(cssPath, 'utf8');
-    const colorTokens = [];
-
-    const themeBlock = css.match(/@theme\s+static\s*{([\s\S]*?)}/);
-    if (themeBlock) {
-        const varMatches = themeBlock[1].matchAll(/--color-([\w-]+):\s*[^;]+;/g);
-        for (const match of varMatches) {
-            colorTokens.push(match[1]); // just the token name, e.g. inkwell-inception
-        }
-    }
-
-    return colorTokens;
+    }).filter(Boolean);
 }
 
 async function runSafelistBuild() {
@@ -123,10 +111,11 @@ async function runSafelistBuild() {
     console.log(`🔍 Processing ${blockJSONs.length} pages...`);
     const classNames = extractClassNamesFromBlockJSON(blockJSONs);
 
-    const outputPath = path.resolve('./tailwind.safelist.json');
-    fs.writeFileSync(outputPath, JSON.stringify(classNames, null, 2));
+    const outputPath = path.resolve('./src/app/safelist.css');
+    const inlineBlock = `@source inline("${classNames.join(' ')}");\n`;
 
-    console.log(`✅ Wrote ${classNames.length} class names to ${outputPath}`);
+    fs.writeFileSync(outputPath, inlineBlock);
+    console.log(`✅ Wrote ${classNames.length} classes to ${outputPath}`);
 }
 
 const isWatchMode = process.argv.includes('--watch');
@@ -142,4 +131,4 @@ if (isWatchMode) {
     });
 }
 
-runSafelistBuild()
+runSafelistBuild();

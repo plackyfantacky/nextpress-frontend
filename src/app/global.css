@@ -1,8 +1,14 @@
 @import "tailwindcss";
 @import 'highlight.js/styles/atom-one-dark.css';
+@import "./safelist.css";
+
+@source inline("{bg,text,border,outline,accent}-{primary,secondary,carona,hamtaro-brown,inkwell,torchlight,blanched-almond,tuscan,copious-caramel,peach-beach,bisque,chocolate-castle,ash,black-mana,vulcanised,inkwell-inception}");
+@source inline("col-span-{1..12}");
+@source inline("opacity-{0..100}");
+
 
 @theme static {
-    --color-primary: 249 157 42;
+    --color-primary: #f99d2a;
     --color-secondary: #ae6e1d;    
     --color-carona: #f99d2a;
     --color-hamtaro-brown: #ae6e1d;

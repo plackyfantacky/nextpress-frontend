@@ -1,5 +1,5 @@
 node_modules/
 .next
 .env
-tailwind.safelist.json
-tailwind.custom.json
+
+src/app/safelist.css

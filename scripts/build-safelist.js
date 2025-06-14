@@ -87,12 +87,34 @@ function extractClassNamesFromBlockJSON(blocksJSON) {
     return Array.from(classNames);
 }
 
+function extractTailwindColorTokens(cssPath) {
+    const css = fs.readFileSync(cssPath, 'utf8');
+    const colorTokens = [];
+
+    const themeBlock = css.match(/@theme\s+static\s*{([\s\S]*?)}/);
+    if (themeBlock) {
+        const varMatches = themeBlock[1].matchAll(/--color-([\w-]+):\s*[^;]+;/g);
+        for (const match of varMatches) {
+            colorTokens.push(match[1]); // just the token name, e.g. inkwell-inception
+        }
+    }
+
+    return colorTokens;
+}
+
 async function runSafelistBuild() {
     console.log('🔄 Fetching block data...');
     const blockJSONs = await fetchAllPageBlockJSON();
 
     console.log(`🔍 Processing ${blockJSONs.length} pages...`);
     const classNames = extractClassNamesFromBlockJSON(blockJSONs);
+
+    const colorTokens = extractTailwindColorTokens('./src/app/global.css');
+    for (const token of colorTokens) {
+        classNames.add(`bg-${token}`);
+        classNames.add(`text-${token}`);
+        classNames.add(`border-${token}`);
+    }
 
     const outputPath = path.resolve('./tailwind.safelist.json');
     fs.writeFileSync(outputPath, JSON.stringify(classNames, null, 2));
@@ -106,7 +128,7 @@ if (isWatchMode) {
     console.log('👀 Watch mode enabled. Watching for changes in ./src...');
     const watchExtensions = ['.js', '.jsx', '.json'];
     fs.watch('./src', { recursive: true }, (eventType, filename) => {
-        if(watchExtensions.some(ext => filename.endsWith(ext))) {
+        if (watchExtensions.some(ext => filename.endsWith(ext))) {
             console.log(`🔄 Detected change in ${filename}, rebuilding safelist...`);
             exec('npm run safelist');
         }
@@ -114,5 +136,3 @@ if (isWatchMode) {
 }
 
 runSafelistBuild()
-
-

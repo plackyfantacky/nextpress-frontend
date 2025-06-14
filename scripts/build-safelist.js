@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import { exec } from 'child_process';
 
 dotenv.config(); // Load .env for WP_URL
@@ -29,11 +29,20 @@ async function fetchAllPageBlockJSON() {
     }
   `;
 
+    const proxy = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+    const agent = proxy ? new HttpsProxyAgent(proxy) : undefined;
+
     const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
+        dispatch: agent
     });
+
+    if (!res.ok) {
+        console.error(`❌ Failed to fetch block data: ${res.statusText}`);
+        process.exit(1);
+    }
 
     const json = await res.json();
 
@@ -62,16 +71,6 @@ function extractClassNamesFromBlockJSON(blocksJSON) {
                     .forEach(cls => classNames.add(cls));
             }
 
-            // Extract style="width: ..." from innerHTML
-            const styleMatches = innerHTML.match(/style="([^"]+)"/g) || [];
-            for (const styleMatch of styleMatches) {
-                const styleContent = styleMatch.replace(/^style="/, '').replace(/"$/, '');
-                const widthMatch = styleContent.match(/width:\s*([\d.]+(px|rem|em|%)?)/);
-                if (widthMatch) {
-                    classNames.add(`w-[${widthMatch[1]}]`);
-                }
-            }
-
             walk(innerBlocks);
         }
     }
@@ -85,22 +84,37 @@ function extractClassNamesFromBlockJSON(blocksJSON) {
         }
     }
 
-    return Array.from(classNames).filter(cls => {
-        return !/^wp-image-\d+$/.test(cls) &&
-            !/^wp-block-/.test(cls) &&
-            !/^wp-element-/.test(cls) &&
-            !/^has-[\w-]+(-(color|background-color|font-size|dim|gradient|border-color|text-align))?$/.test(cls) &&
-            !/^align(left|right|center|wide|full)$/.test(cls) &&
-            !/^is-/.test(cls);
-    });
+    return Array.from(classNames);
 }
 
-async function main() {
+function extractTailwindColorTokens(cssPath) {
+    const css = fs.readFileSync(cssPath, 'utf8');
+    const colorTokens = [];
+
+    const themeBlock = css.match(/@theme\s+static\s*{([\s\S]*?)}/);
+    if (themeBlock) {
+        const varMatches = themeBlock[1].matchAll(/--color-([\w-]+):\s*[^;]+;/g);
+        for (const match of varMatches) {
+            colorTokens.push(match[1]); // just the token name, e.g. inkwell-inception
+        }
+    }
+
+    return colorTokens;
+}
+
+async function runSafelistBuild() {
     console.log('🔄 Fetching block data...');
     const blockJSONs = await fetchAllPageBlockJSON();
 
     console.log(`🔍 Processing ${blockJSONs.length} pages...`);
     const classNames = extractClassNamesFromBlockJSON(blockJSONs);
+
+    const colorTokens = extractTailwindColorTokens('./src/app/global.css');
+    for (const token of colorTokens) {
+        classNames.add(`bg-${token}`);
+        classNames.add(`text-${token}`);
+        classNames.add(`border-${token}`);
+    }
 
     const outputPath = path.resolve('./tailwind.safelist.json');
     fs.writeFileSync(outputPath, JSON.stringify(classNames, null, 2));
@@ -108,13 +122,17 @@ async function main() {
     console.log(`✅ Wrote ${classNames.length} class names to ${outputPath}`);
 }
 
-fs.watch('./src', { recursive: true }, (eventType, filename) => {
-    if (filename.endsWith('.js') || filename.endsWith('.json')) {
-        console.log(`🔄 Detected change in ${filename}, rebuilding safelist...`);
-        exec('npm run safelist');
-    }
-});
+const isWatchMode = process.argv.includes('--watch');
 
+if (isWatchMode) {
+    console.log('👀 Watch mode enabled. Watching for changes in ./src...');
+    const watchExtensions = ['.js', '.jsx', '.json'];
+    fs.watch('./src', { recursive: true }, (eventType, filename) => {
+        if (watchExtensions.some(ext => filename.endsWith(ext))) {
+            console.log(`🔄 Detected change in ${filename}, rebuilding safelist...`);
+            exec('npm run safelist');
+        }
+    });
+}
 
-main();
-
+runSafelistBuild()

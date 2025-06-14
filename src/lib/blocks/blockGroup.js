@@ -1,30 +1,20 @@
 import React from "react";
-import { joinClassNames, withConditionalInnerWrapper } from "../utils";
+import { joinClassNames, withConditionalInnerWrapper } from "@/lib/utils";
 
 export default function BlockGroup({ block, keyPrefix, children }) {
-    const { attrs = {}, blockClassName = '', innerHTML = '' } = block;
-    const {
-        layout = {},
-        tagName = 'div',
-        className = '' //explicably set by the user in the editor
-    } = attrs;
+    const { attrs = {}, idAttribute = '', blockClassName = '', normalizedClassNames = '', innerHTML = '' } = block;
+    const { layout = {}, tagName: Tag = 'div' } = attrs;
 
-    const type = layout.type || 'default';
-    const orientation = type === 'flex' ? layout.orientation || 'horizontal' : undefined;
+    const isFlex = layout.type === 'flex';
+    const orientation = isFlex ? (layout.orientation || 'horizontal') : undefined;
 
-    let layoutClass = '';
-    let computedClassName = blockClassName;
-
-    if (type === 'flex') {
-        computedClassName = orientation === 'horizontal' ? 'row-block' : 'stack-block';
-        layoutClass = orientation === 'horizontal' ? 'flex flex-row' : 'flex flex-col';
-    }
-
-    const Tag = tagName || 'div';
-    const finalClassNames = joinClassNames(computedClassName, layoutClass, className);
+    const blockClassNames = joinClassNames(
+        blockClassName,
+        isFlex ? orientation === 'horizontal' ? 'row-block flex flex-row' : 'stack-block flex flex-col' : 'group-block' //don't think about this too hard, just go with it.
+    );
 
     return (
-        <Tag key={keyPrefix} className={finalClassNames} >
+        <Tag key={keyPrefix} className={blockClassNames} {...(idAttribute ? { id: idAttribute } : {})}>
             {withConditionalInnerWrapper(children, innerHTML, blockClassName)}
         </Tag>
     );

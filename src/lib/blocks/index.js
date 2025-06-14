@@ -1,4 +1,4 @@
-import {extractTextFromTag, normalizeClassNames, normalizeBlockName } from '../utils';
+import {extractTextFromTag, normalizeClassNames, normalizeBlockName, extractAttributeValue } from '../utils';
 
 const blockRenderers = {
     'core/cover': () => import('./blockCover'),
@@ -35,14 +35,13 @@ export async function renderBlock(block, keyPrefix = 'block', postContext = {}) 
     const { attrs = {}, blockName, innerBlocks = [], innerHTML } = block;
     if (!blockName && (!innerHTML || innerHTML.trim() === '')) { return null; }
 
-    const rawClass = extractTextFromTag(innerHTML, 'class');
-    const normalizedClassNames = normalizeClassNames(`${rawClass} ${attrs?.className || ''}`);
-    
+    const normalizedClassNames = normalizeClassNames(extractAttributeValue({html: innerHTML, attribute: 'class'}) || '');
     const blockClassName = normalizeBlockName(blockName);
-    
-    // renderer becomes a function (imported dynamically) that returns a React component.
-    const renderer = blockRenderers[blockName]; //still need to reference the WP block name here.
+    const idAttribute = extractAttributeValue({html: innerHTML, attribute: 'id'}) || '';
+    //TO DO: investigate if its possible for WordPress to allow attributes to be passed in the block data.
+    // If so, we'll need to handle that here.
 
+    const renderer = blockRenderers[blockName];
     if (!renderer) {
         console.warn(`Unhandled block type: ${blockName}`);
         return null;
@@ -55,7 +54,7 @@ export async function renderBlock(block, keyPrefix = 'block', postContext = {}) 
         <Component
             key={keyPrefix}
             keyPrefix={`${keyPrefix}-${Math.random().toString(36).substring(2, 8)}`}
-            block={{ ...block, blockClassName, normalizedClassNames }}
+            block={{ ...block, idAttribute, blockClassName, normalizedClassNames }}
             postContext={postContext}
             children={children}
         />

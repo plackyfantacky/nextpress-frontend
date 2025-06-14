@@ -2,17 +2,13 @@ import React from "react";
 import { joinClassNames, withConditionalInnerWrapper } from "../utils";
 
 export default function BlockColumns({ block, keyPrefix, children }) {
-    const { attrs, blockClassName, innerHTML } = block;
-    const {
-        tagName = 'div',
-        className = '' //explicably set by the user in the editor
-    } = attrs;
+    const { attrs = {}, idAttribute = '', blockClassName = '', normalizedClassNames = '', innerHTML = ''} = block;
+    const { tagName: Tag = 'div' } = attrs;
 
-    const Tag = tagName || 'div';
-    const finalClassNames = joinClassNames(blockClassName, 'grid grid-cols-12', className);
+    const blockClassNames = joinClassNames(blockClassName, 'grid grid-cols-12', normalizedClassNames);
 
     return (
-        <Tag key={keyPrefix} className={finalClassNames} >
+        <Tag key={keyPrefix} className={blockClassNames} {...( idAttribute ? { id: idAttribute } : {} )}>
             {withConditionalInnerWrapper(children, innerHTML, blockClassName)}
         </Tag>
     );

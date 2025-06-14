@@ -50,13 +50,13 @@ export function renderBlock(block, keyPrefix = 'block', postContext = {}) {
             const { className = '' } = attrs;
 
             const blockClassName = 'code-block';
-            const finalClassNames = joinClassNames(blockClassName, className, 'hljs');
+            const blockClassNames = joinClassNames(blockClassName, className, 'hljs');
 
             const codeHTML = innerHTML?.match(/<code[^>]*>(.*?)<\/code>/s)?.[1] || '';
             const highlightedJSX = renderHighlightedCode(codeHTML);
 
             return (
-                <pre key={key} className={finalClassNames}>
+                <pre key={key} className={blockClassNames}>
                     <code>{highlightedJSX}</code>
                 </pre>
             );
@@ -67,14 +67,14 @@ export function renderBlock(block, keyPrefix = 'block', postContext = {}) {
             const { className = '' } = attrs;
 
             const blockClassName = 'preformatted-block';
-            const finalClassNames = joinClassNames(blockClassName, className, 'whitespace-pre-wrap');
+            const blockClassNames = joinClassNames(blockClassName, className, 'whitespace-pre-wrap');
 
             const raw = innerHTML
                 ?.replace(/<\/?pre[^>]*>/g, '')
                 ?.trimStart() || '';
 
             return (
-                <pre key={key} className={finalClassNames}>{raw}</pre>
+                <pre key={key} className={blockClassNames}>{raw}</pre>
             );
         }
 
@@ -91,14 +91,14 @@ export function renderBlock(block, keyPrefix = 'block', postContext = {}) {
 
             // Optional list-style-type override
             const typeClass = type ? `list-${type}` : '';
-            const finalClassNames = joinClassNames(
+            const blockClassNames = joinClassNames(
                 'list-block',
                 `level-${currentLevel}`,
                 typeClass,
                 className);
 
             return (
-                <Tag key={key} className={finalClassNames}>
+                <Tag key={key} className={blockClassNames}>
                     {innerBlocks.map((child, i) =>
                         renderBlock(child, `${keyPrefix}-list-item-${i}`, nextContext)
                     )}
@@ -180,7 +180,7 @@ export function renderBlock(block, keyPrefix = 'block', postContext = {}) {
         case 'core/pullquote': {
             const { className = '' } = attrs;
             const blockClassName = 'pullquote-block';
-            const finalClassNames = joinClassNames(blockClassName, className);
+            const blockClassNames = joinClassNames(blockClassName, className);
 
             // Extract <p> and <cite> content from innerHTML
             const quoteMatch = innerHTML.match(/<blockquote[^>]*>\s*<p>([\s\S]*?)<\/p>/i);
@@ -190,7 +190,7 @@ export function renderBlock(block, keyPrefix = 'block', postContext = {}) {
             const citeText = citeMatch?.[1]?.trim() || '';
 
             return (
-                <figure key={key} className={finalClassNames}>
+                <figure key={key} className={blockClassNames}>
                     <blockquote>
                         <p>{renderInlineHTML(quoteHTML)}</p>
                         {citeText && <cite>{citeText}</cite>}
@@ -207,13 +207,13 @@ export function renderBlock(block, keyPrefix = 'block', postContext = {}) {
             } = attrs;
 
             const blockClassName = 'details-block';
-            const finalClassNames = joinClassNames(blockClassName, className);
+            const blockClassNames = joinClassNames(blockClassName, className);
 
             const summaryMatch = innerHTML.match(/<summary[^>]*>([\s\S]*?)<\/summary>/i);
             const summaryText = summaryMatch?.[1]?.trim() || 'Details';
 
             return (
-                <details key={key} className={finalClassNames} open={showContent}>
+                <details key={key} className={blockClassNames} open={showContent}>
                     <summary>{renderInlineHTML(summaryText)}</summary>
                     <div className={`${blockClassName}--content`}>
                         {innerBlocks.map((child, i) =>
@@ -239,7 +239,7 @@ export function renderBlock(block, keyPrefix = 'block', postContext = {}) {
             const blockClassName = 'media-text-block';
             const alignmentClass = `media-text--${mediaPosition}`;
             const fillClass = imageFill ? 'media-text--fill' : '';
-            const finalClassNames = joinClassNames(
+            const blockClassNames = joinClassNames(
                 blockClassName,
                 alignmentClass,
                 fillClass,
@@ -275,7 +275,7 @@ export function renderBlock(block, keyPrefix = 'block', postContext = {}) {
             }
 
             return (
-                <div key={key} className={finalClassNames}>
+                <div key={key} className={blockClassNames}>
                     <figure className="media-text-media">
                         {mediaLink ? (
                             <a href={mediaLink} target="_blank" rel="noopener noreferrer">

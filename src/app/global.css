@@ -2,8 +2,22 @@
 @import 'highlight.js/styles/atom-one-dark.css';
 
 @theme static {
-    --color-ariom: #f99d2a;
+    --color-primary: 249 157 42;
+    --color-secondary: #ae6e1d;    
+    --color-carona: #f99d2a;
+    --color-hamtaro-brown: #ae6e1d;
     --color-inkwell: #1E1E1E;
+    --color-torchlight: #ffca8a;
+    --color-blanched-almond: #ffebd2;
+    --color-tuscan: #ffd7a6;
+    --color-copious-caramel: #d98823;
+    --color-peach-beach: #ffd0a2;
+    --color-bisque: #ffe3c7;
+    --color-chocolate-castle: #462805;
+    --color-ash: #c2bba6;
+    --color-black-mana: #848484;
+    --color-vulcanised: #434343;
+    --color-inkwell-inception: #1E1E1E;
     --text-h1: 3.815rem;
     --text-h2: 3.052rem;
     --text-h3: 2.441rem;

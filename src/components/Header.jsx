@@ -4,7 +4,7 @@ import Logo from "@/components/Logo";
 
 const Header = () => {
     return (
-        <header className="flex flex-row justify-between items-center bg-ariom text-black h-32 p-4 text-white">
+        <header className="flex flex-row justify-between items-center bg-carona text-black h-32 p-4 text-white">
             <Logo />
             <nav className="mt-2">
                 <ul className="flex space-x-4">

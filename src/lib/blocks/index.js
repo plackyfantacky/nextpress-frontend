@@ -17,6 +17,7 @@ const blockRenderers = {
     'core/table': () => import('./blockTable'),
     'core/pullquote': () => import('./blockPullquote'),
     'core/details': () => import('./blockDetails'),
+    'core/media-text': () => import('./blockMediaText'),
 
     // Add other block renderers here
 };

@@ -270,7 +270,7 @@ export function joinClassNames(...args) {
 export function withConditionalInnerWrapper(children, innerHTML = '', blockName = '', additionalClasses = '') {
     const hasInner = innerHTML.includes('class="inner"') || innerHTML.includes("class='inner'");
     const blockSuffix = blockName ? `${blockName.replace('-block', '')}-inner` : '';
-    let innerClasses = hasInner ? `${blockSuffix} inner`.trim() : '';
+    let innerClasses = hasInner ? `${blockSuffix}`.trim() : '';
 
     if (additionalClasses) {
         const classNames = hasInner ? `${innerClasses} ${additionalClasses}` : additionalClasses;

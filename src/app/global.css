@@ -1,41 +1,121 @@
 @import "tailwindcss";
 @import 'highlight.js/styles/atom-one-dark.css';
+@import "./safelist.css";
+
+@source inline("{bg,text,border,outline,accent}-{primary,secondary,carona,hamtaro-brown,inkwell,torchlight,blanched-almond,tuscan,copious-caramel,peach-beach,bisque,chocolate-castle,ash,black-mana,vulcanised,inkwell-inception}");
+@source inline("col-span-{1..12}");
+@source inline("opacity-{0..100}");
+@source inline("justify-{start,end,center}");
+@source inline("items-{start,end,center}");
+@source inline("w-[100cqw]");
+@source inline("text-{2..9}xl");
 
 @theme static {
-    --color-ariom: #f99d2a;
+    --color-primary: #f99d2a;
+    --color-secondary: #ae6e1d;
+    --color-carona: #f99d2a;
+    --color-hamtaro-brown: #ae6e1d;
     --color-inkwell: #1E1E1E;
+    --color-torchlight: #ffca8a;
+    --color-blanched-almond: #ffebd2;
+    --color-tuscan: #ffd7a6;
+    --color-copious-caramel: #d98823;
+    --color-peach-beach: #ffd0a2;
+    --color-bisque: #ffe3c7;
+    --color-chocolate-castle: #462805;
+    --color-ash: #c2bba6;
+    --color-black-mana: #848484;
+    --color-vulcanised: #434343;
+    --color-inkwell-inception: #1E1E1E;
+
     --text-h1: 3.815rem;
     --text-h2: 3.052rem;
     --text-h3: 2.441rem;
     --text-h4: 1.953rem;
     --text-h5: 1.563rem;
     --text-h6: 1.25rem;
+
+    /* TODO: investigate why these aren't coming through to the frontend. */
+    --text-base: 1rem;
+    --text-sm: 0.875rem;
+    --text-xs: 0.75rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+    --text-5xl: 3rem;
+    --text-6xl: 3.75rem;
+    --text-7xl: 4.5rem;
+    --text-8xl: 6rem;
+    --text-9xl: 8rem;
+
+    --width-content: 40rem;
+    --width-wide: 60rem
 }
 
 h1 {
-    @apply text-h1 leading-[1.6] font-bold mb-4;
+    @apply text-h1 leading-[1.6] font-bold;
 }
 
 h2 {
-    @apply text-h2 leading-[1.6] font-bold mb-4;
+    @apply text-h2 leading-[1.6] font-bold;
 }
 
 h3 {
-    @apply text-h3 leading-[1.6] font-bold mb-4;
+    @apply text-h3 leading-[1.6] font-bold;
 }
 
 h4 {
-    @apply text-h4 leading-[1.6] font-bold mb-4;
+    @apply text-h4 leading-[1.6] font-bold;
 }
 
 h5 {
-    @apply text-h5 leading-[1.6] font-bold mb-4;
+    @apply text-h5 leading-[1.6] font-bold;
 }
 
 h6 {
-    @apply text-h6 leading-[1.6] font-bold mb-4;
+    @apply text-h6 leading-[1.6] font-bold;
 }
 
 p {
-    @apply text-base font-light mb-4;
+    @apply text-base font-light;
+}
+
+
+
+
+@layer utilities {
+
+    .modal {
+        display: none;
+
+        &.is-open {
+            display: block;
+        }
+    }
+
+    .code-block {
+        @apply p-4 overflow-scroll;
+    }
+
+    .wrap-image-left {
+        @apply float-left;
+        shape-outside: margin-box;
+        display: block;
+    }
+
+    .wrap-image-right {
+        @apply float-right;
+        shape-outside: margin-box;
+        display: block;
+    }
+
+    .wrap-image-center {
+        shape-outside: margin-box;
+        display: block;
+    }
+
+    .wrap-paragraph {
+        @apply overflow-hidden;
+    }
+
 }

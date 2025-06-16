@@ -1,15 +1,12 @@
 import React from "react";
-import { joinClassNames, stripParagraphWrapper } from "../utils";
-import { renderInlineHTML } from "../parser";
+import { joinClassNames, extractTag } from "@/lib/utils";
+import { renderInlineHTML } from "@/lib/parser";
 
 export default function BlockParagraph({ block, keyPrefix }) {
-    const { attrs = {}, blockClassName = '', innerHTML } = block;
-    const { className = '' } = attrs;
-    
-    const finalClassNames = joinClassNames(blockClassName, className);
-    const cleanHTML = stripParagraphWrapper(innerHTML);
+    const { idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = '' } = block;
 
-    return (<p key={keyPrefix} {...(finalClassNames ? { className: finalClassNames } : {})}>
-        {renderInlineHTML(cleanHTML)}
-    </p>);
+    const blockClassNames = joinClassNames(blockClassName, normalisedClassNames);
+    const text = renderInlineHTML(extractTag(innerHTML, 'p', true) || '');
+
+    return <p key={keyPrefix} {...(blockClassNames ? { className: blockClassNames } : {})} {...(idAttribute ? { id: idAttribute } : {})}>{text}</p>;
 }

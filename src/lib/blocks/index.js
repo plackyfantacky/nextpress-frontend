@@ -1,12 +1,24 @@
-import { extractTextAndClasses, normalizeBlockClassName } from '../utils';
+import { normaliseClassNames, normaliseBlockName, extractAttributeValue, preprocessBlock } from '../utils';
 
 const blockRenderers = {
     'core/cover': () => import('./blockCover'),
     'core/group': () => import('./blockGroup'),
     'core/columns': () => import('./blockColumns'),
     'core/column': () => import('./blockColumn'),
+    'core/image': () => import('./blockImage'),
+    'core/post-title': () => import('./blockPostTitle'),
+    'core/heading': () => import('./blockHeading'),
     'core/paragraph': () => import('./blockParagraph'),
-    
+    'core/quote': () => import('./blockQuote'),
+    'core/code': () => import('./blockCode'),
+    'core/preformatted': () => import('./blockPreformatted'),
+    'core/list': () => import('./blockList'),
+    'core/list-item': () => import('./blockListItem'),
+    'core/table': () => import('./blockTable'),
+    'core/pullquote': () => import('./blockPullquote'),
+    'core/details': () => import('./blockDetails'),
+    'core/media-text': () => import('./blockMediaText'),
+
     // Add other block renderers here
 };
 
@@ -31,10 +43,18 @@ export async function renderBlock(block, keyPrefix = 'block', postContext = {}) 
     const { blockName, innerBlocks = [], innerHTML } = block;
     if (!blockName && (!innerHTML || innerHTML.trim() === '')) { return null; }
 
-    const { text, blockClassName: rawClass } = extractTextAndClasses(innerHTML);
-    const blockClassName = normalizeBlockClassName(rawClass);
-    const renderer = blockRenderers[blockName];
+    block = preprocessBlock(block);
+    
+    const wrapperTag = block.wrapperTag || '';
+    const normalisedClassNames = normaliseClassNames(extractAttributeValue({html: innerHTML, tag: wrapperTag, attribute: 'class'}) || '');
+    const blockClassName = normaliseBlockName(blockName);
+    const idAttribute = extractAttributeValue({html: innerHTML, attribute: 'id'}) || '';
+    
+    
+    //TO DO: investigate if its possible for WordPress to allow attributes to be passed in the block data.
+    // If so, we'll need to handle that here somewhere.
 
+    const renderer = blockRenderers[blockName];
     if (!renderer) {
         console.warn(`Unhandled block type: ${blockName}`);
         return null;
@@ -47,7 +67,7 @@ export async function renderBlock(block, keyPrefix = 'block', postContext = {}) 
         <Component
             key={keyPrefix}
             keyPrefix={`${keyPrefix}-${Math.random().toString(36).substring(2, 8)}`}
-            block={{...block, blockClassName, text}}
+            block={{ ...block, idAttribute, blockClassName, normalisedClassNames }}
             postContext={postContext}
             children={children}
         />

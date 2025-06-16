@@ -1,32 +1,225 @@
 /**
- * Extract the text content and css classes from a given string of innerHTML.
- * @param {string} innerHTML - The HTML string to extract from.
- * @returns {Object} An object containing the text content, block class name (first css class) and remaining css classes.
+ * Normalizes a list of class names by removing duplicates, filtering out WordPress-specific classes,
+ * and converting WordPress-style classes to Tailwind CSS equivalents.
+ * @param {string} classList - The class list string to normalise.
+ * @param {Object} options - Options for normalization.
+ * @param {boolean} options.convert - Whether to convert WordPress-style classes to Tailwind CSS equivalents.
+ * @returns {string} A normalised class list string suitable for use with Tailwind CSS.
  */
-export function extractTextAndClasses(innerHTML) {
-    if (typeof innerHTML !== 'string') return { text: '', className: '' };
+export function normaliseClassNames(classList = '', { convert = true } = {}) {
+    const seen = new Set();
 
-    // SSR fallback
-    if (typeof window === 'undefined') {
+    //console.log('BEFORE', classList);
 
-        const classMatch = innerHTML.match(/class="([^"]+)"/);
-        const text = innerHTML.replace(/<[^>]+>/g, '').trim();
+    let newClassList = classList
+        .split(/\s+/)
+        .filter(Boolean)
+        .filter(cls => {
+            if (seen.has(cls)) return false;
+            seen.add(cls);
 
-        return { text, blockClassName: classMatch?.[1] ?? '', remainingClasses: classMatch?.[1]?.split(/\s+/) || [] };
-    }
+            const removeThese = [
+                'wp-block',
+                'is-layout',
+                'has-text-color',
+                'has-link-color',
+                'is-style-default',
+                'is-style-plain',
+                'is-image-fill-element',
+                'has-background',
+                'has-custom-content-position',
+                'is-light',
+                'is-dark',
+                'wp-image-'
+            ];
+            if (removeThese.some(str => cls.includes(str))) return false;
 
-    // CSR main functionality
-    const wrapper = document.createElement('div');
-    wrapper.inertHTML = innerHTML.trim();
+            return true;
+        })
+        .map(cls => {
+            if (!convert) return cls;
+
+            // Convert WP-style color background
+            if (cls.startsWith('has-') && cls.endsWith('-background-color')) {
+                const color = cls.replace('has-', '').replace('-background-color', '');
+                return `bg-${color}`;
+            }
+
+            // Convert WP has-text-align-{alignment} to Tailwind CSS text alignment classes
+            if (cls.startsWith('has-text-align-')) {
+                const alignment = cls.replace('has-text-align-', '');
+                if (alignment === 'left') return 'text-left';
+                if (alignment === 'right') return 'text-right';
+                if (alignment === 'center') return 'text-center';
+                if (alignment === 'justify') return 'text-justify';
+            }
+
+            // Convert WP-style font sizes
+            if (cls.startsWith('has-') && cls.endsWith('-font-size')) {
+                //check if the value already starts with "text-", if so, return without "has-" and "-font-size"
+
+                let size;
+
+                if (cls.startsWith('has-text-') || cls.startsWith('has-')) {
+                    size = cls
+                        .replace('has-', '')
+                        .replace('text-', '')
+                        .replace('-font-size', '');
+                }
+
+                // Map WP font sizes to Tailwind CSS equivalents
+                const sizeMap = {
+                    'small': 'sm',
+                    'medium': 'base',
+                    'large': 'lg',
+                    'x-large': 'xl',
+                    'xx-large': '2xl',
+                    'huge': '3xl',
+                    // Add more mappings as needed
+                };
+                size = sizeMap[size] || size; // Default to the original size if not found
+                //check the strin and remove any "text-" prefix and any subsequent dashes
+                size = size
+                    .replace('text-', '')
+                    .replace(/-/g, '');
+
+                return `text-${size}`;
+            }
+
+            // Convert WP-style text colors
+            if (cls.startsWith('has-') && cls.endsWith('-color')) {
+                const color = cls.replace('has-', '').replace('-color', '');
+                return `text-${color}`;
+            }
+
+            // Convert WP-style font families
+            if (cls.startsWith('has-') && cls.endsWith('-font-family')) {
+                const family = cls.replace('has-', '').replace('-font-family', '');
+                return `font-${family}`;
+            }
+
+            // Convert WP Media Text block alignment to flex-direction
+            if (cls.startsWith('has-media-on-the-')) {
+                const position = cls.replace('has-media-on-the-', '');
+                if (position === 'left') return 'flex-row';
+                if (position === 'right') return 'flex-row-reverse';
+            }
+
+            // Conver WP is-vertically-aligned-{direction} to Tailwind CSS flex classes
+            if (cls.startsWith('is-vertically-aligned-')) {
+                const direction = cls.replace('is-vertically-aligned-', '');
+                if (direction === 'top') return 'items-start';
+                if (direction === 'center') return 'items-center';
+                if (direction === 'bottom') return 'items-end';
+            }
+
+            //Convert WP is-(not-)stacked-on-mobile to sm:flex-col
+            if (cls === 'is-stacked-on-mobile') return 'sm:flex-col';
+            if (cls === 'is-not-stacked-on-mobile') return 'sm:flex-row';
+
+            // Convert WP alignments to Tailwind CSS float classes
+            if (cls.startsWith('align')) {
+                const align = cls.slice(5);
+                // TODO: left, right, and center are acceptable currently, but don't allow wraping
+                if (align === 'left') return 'self-start mr-4 mb-4';
+                if (align === 'right') return 'self-end ml-4 mb-4';
+                if (align === 'center') return 'self-center mx-auto';
+                // TODO: haven't tested these with images/figures. They do work with group-blocks.
+                if (align === 'wide') return 'w-wide mx-auto'; // Example for wide alignment
+                if (align === 'full') return 'w-[100cqw]'; // Example for full width. I don't know if this is genius or madness, but it works.
+            }
+
+            // Convert WP position variants to Tailwind CSS flex classes
+            // TODO: check blockGroup for an inline function that may need to come here. Untested: What happens if the flex-direction is changed?
+            if (cls.startsWith('is-position-')) {
+                const [vertical, horizontal] = cls.split(' ');
+
+                const justify = {
+                    left: 'justify-start',
+                    center: 'justify-center',
+                    right: 'justify-end',
+                }[horizontal] || 'justify-center';
+
+                const align = {
+                    top: 'items-start',
+                    center: 'items-center',
+                    bottom: 'items-end',
+                }[vertical] || 'items-center';
+
+                return `flex ${justify} ${align}`;
+            }
+
+            //convert WP has-parallax to Tailwind CSS background-attachment
+            if (cls === 'has-parallax') return 'bg-fixed';
+
+            // Convert WP is-repeated to Tailwind CSS background-repeat
+            if (cls === 'is-repeated') return 'bg-repeat';
+
+            // Generic has-background
+            if (cls === 'has-background') return 'opacity-100';
+
+            // Convert WP size classes to Tailwind CSS media classes
+            if (cls.startsWith('size-')) {
+                return `media-${cls.slice(5)}`; //only used as an identifier, not a class
+            }
+
+            return cls;
+        })
+        .join(' ');
+
+    //console.log('AFTER', newClassList);
+
+    return newClassList;
+}
+
+/**
+ * Some blocks dont have innerHTML, but have classNames and other style properties in block attributes.
+ */
+export function normaliseClassNamesFromAttributes(attrs) {
+    if (!attrs || typeof attrs !== 'object') return '';
+    const { className = '', style = {} } = attrs;
+
+    let normalisedClassNames = '';
+
+    /*
+       rollcall for potential classNames:
+        - backgroundColor
+        - textColor
+        - fontSize
+        - fontFamily
+
+        also be careful:
+
+        - style.typography - letterSpacing
+        - style.layout - selfStretch, flexSize
+    */
+
+    const classNames = [];
+
+    if (attrs.backgroundColor) { classNames.push(`bg-${attrs.backgroundColor}`); }
+    if (attrs.textColor) { classNames.push(`text-${attrs.textColor}`); }
+    if (attrs.fontSize) { classNames.push(`text-${attrs.fontSize}`); }
+    if (attrs.fontFamily) { classNames.push(`font-${attrs.fontFamily}`); }
+
+    // Convert style properties to Tailwind CSS classes
+    if (style?.typography?.letterSpacing) { classNames.push(`tracking-[${style.typography.letterSpacing}]`); }
+
+    // TODO: check these are valid properties.
+    //if (style?.layout?.selfStretch) { classNames.push('self-stretch'); }
+    //if (style?.layout?.flexSize) { classNames.push(`flex-${style.layout.flexSize}`); } 
+
+    return joinClassNames(className, normalisedClassNames, ...classNames);
+}
 
 
-    const firstEl = wrapper.firstElementChild;
-
-    return {
-        text: firstEl?.textContent?.trim() ?? '',
-        blockClassName: firstEl?.className?.trim() ?? '',
-        remainingClasses: firstEl?.className?.trim()?.split(/\s+/) || []
-    };
+/**
+ * Convert blockName from "core/paragraph" to "paragraph"
+ * @param {string} blockName - The block name to normalise.
+ * @returns {string} The normalised block name, e.g. "paragraph" or "cover".
+ */
+export function normaliseBlockName(blockName = '') {
+    if (typeof blockName !== 'string') return '';
+    return blockName.replace(/^core\//, '') + '-block'; // Append "-block" to match the convention used in block renderers
 }
 
 /**
@@ -37,51 +230,19 @@ export function extractTextAndClasses(innerHTML) {
  */
 export function contentPositionToTailwind(pos) {
     // WordPress uses e.g. "center left", "top right", etc.
+    // assume the flex container is a column
     const [vertical, horizontal] = pos.split(' ');
 
-    const justify = {
-        left: 'justify-start',
-        center: 'justify-center',
-        right: 'justify-end',
-    }[horizontal] || 'justify-center';
+    //console.log(pos);
 
-    const align = {
-        top: 'items-start',
-        center: 'items-center',
-        bottom: 'items-end',
-    }[vertical] || 'items-center';
-
-    return `flex ${justify} ${align}`;
-}
-
-/**
- * Normalizes a block class name by mapping WordPress block class names to custom class names.
- * This is useful for converting WordPress block class names to a more readable format.
- * @param {string} input - The block class name to normalize.
- * @returns {string} The normalized class name.
- */
-export function normalizeBlockClassName(input = '') {
-
-    if (typeof input !== 'string') return '';
-
-    const classMap = {
-        'wp-block-group': 'group-block',
-        'wp-block-columns': 'columns-block',
-        'wp-block-column': 'column-block',
-        'wp-block-cover': 'cover-block',
-        'wp-block-image': 'image',
-        'wp-block-paragraph': 'paragraph',
-        'wp-block-heading': 'heading',
-        'wp-block-list': 'list',
-        'wp-block-media-text': 'media-text-block',
+    const direction = {
+        left: 'start',
+        center: 'center',
+        right: 'end',
     };
-    const words = input.trim().split(/\s+/);
 
-    const renamed = words.flatMap(wpClass =>
-        classMap[wpClass]?.split(' ') || []
-    );
+    return `flex items-${direction[horizontal] || 'center'} justify-${direction[vertical] || 'center'}`;
 
-    return renamed.join(' ');
 }
 
 /**
@@ -102,58 +263,132 @@ export function joinClassNames(...args) {
  * This is useful for blocks that require a specific inner structure.
  * @param {ReactNode} children - The children to wrap.
  * @param {string} innerHTML - The innerHTML string to check for the "inner" class.
+ * @param {string} blockName - The name of the block, used to generate a specific class suffix.
+ * @param {string} additionalClasses - Additional classes to apply to the inner div. use rarely.
  * @returns {ReactNode} The children wrapped in a div with class "inner" if applicable.
  */
-export function withConditionalInnerWrapper(children, innerHTML = '', blockName = '') {
+export function withConditionalInnerWrapper(children, innerHTML = '', blockName = '', additionalClasses = '') {
     const hasInner = innerHTML.includes('class="inner"') || innerHTML.includes("class='inner'");
     const blockSuffix = blockName ? `${blockName.replace('-block', '')}-inner` : '';
-    const innerClasses = hasInner ? `${blockSuffix} inner`.trim() : '';
+    let innerClasses = hasInner ? `${blockSuffix}`.trim() : '';
 
-    return hasInner 
-        ? <div className={innerClasses}>{children}</div>
-        : children;
+    if (additionalClasses) {
+        const classNames = hasInner ? `${innerClasses} ${additionalClasses}` : additionalClasses;
+        return <div className={classNames}>{children}</div>;
+    } else {
+        return hasInner
+            ? <div className={innerClasses}>{children}</div>
+            : children;
+    }
+
 }
 
 /**
- * Extracts the text content from a <cite> element within a block's innerHTML.
+ * Normalizes the class list of a figure element by removing duplicates and converting WordPress-specific classes to Tailwind CSS equivalents.
+ * @param {string} classList - The class list string to normalise.
+ * @returns {string} A normalised class list string suitable for use with Tailwind CSS.
+ * This function filters out WordPress-specific classes like 'wp-block-image' and 'is-resized', and converts alignment and size classes to Tailwind equivalents.
+ */
+export function normaliseFigureClasses(classList = '') {
+    const seen = new Set();
+    const classNames = classList.split(/\s+/);
+
+    return classNames
+        .filter(cls => {
+            if (['wp-block-image', 'is-resized'].includes(cls)) return false; // Exclude WordPress-specific classes
+
+            if (seen.has(cls)) return false; // Filter out duplicates
+            seen.add(cls);
+            return true; // Keep unique classes
+        })
+        .map(cls => {
+            // Convert known WP classes to Tailwind equivalents
+            if (cls.startsWith('align')) {
+                const align = cls.replace('align', '');
+                if (align === 'left') return 'float-left mr-4 mb-4';
+                if (align === 'right') return 'float-right ml-4 mb-4';
+                if (align === 'center') return 'mx-auto';
+            }
+            if (cls.startsWith('size-')) {
+                return `media-${cls.slice(5)}`; //only used as an identifier, not a class
+            }
+            return cls; // Return the class as is if no transformation is needed
+        })
+        .join(' ');
+}
+
+/**
+ * Parses the width from a CSS style string.
+ * @param {string} style - The CSS style string to parse.
+ * @returns {string|null} The width value if found, otherwise null.
+ */
+export function parseWidthFromStyle(style = '') {
+    const match = style.match(/width\s*:\s*([0-9.]+[a-z%]*)/i);
+    return match ? match[1] : null;
+}
+
+/**
+ * Extracts the first occurrence of a specific HTML tag from a string.
  * @param {string} html - The HTML string to search within.
- * @returns {string|null} The text content of the <cite> element, or null if not found.
+ * @param {string} tag - The tag name to extract (e.g., 'p', 'div').
+ * @returns {string|null} The first occurrence of the specified tag, or null if not found.
  */
-export function extractCiteText(innerContent = []) {
-    const citeHTML = innerContent.find(
-        (s) => typeof s === 'string' && s.includes('<cite')
-    );
-    const match = citeHTML?.match(/<cite[^>]*>(.*?)<\/cite>/i);
-    return match?.[1]?.trim() || null;
+export function extractTag(html = '', tag = '', contentOnly = true, asString = true) {
+    if (!html || !tag) return null;
+
+    //const tagRegex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'gi');
+    const tagRegex = new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'gi');
+    const matches = [...html.matchAll(tagRegex)];
+
+    if (matches.length === 0) return null;
+
+    if (asString === false) {
+        return matches.map(m => (contentOnly ? m[1].trim() : m[0].trim()));
+    }
+
+    // Legacy behavior — return only first match
+    return contentOnly ? matches[0][1].trim() : matches[0][0].trim();
 }
 
 /**
- * Maps quote styles to Tailwind CSS classes.
- * @param {Object} attrs - The attributes of the quote block.
- * @returns {Array} An array of Tailwind CSS classes for the quote block.
+ * Extracts the value of a specific attribute from an HTML string.
+ * @param {string} html - The HTML string to search within.
+ * @param {string} attribute - The attribute name to extract (e.g., 'src', 'href').
+ * @param {string|optional} tag - The tag name to search for (e.g., 'img', 'a').
+ * @param {number} index - The index of the match to return (default is 1, for the first match).
+ * @returns {string|null} The value of the specified attribute, or null if not found.
  */
-export function mapQuoteStyles(attrs = {}) {
-    const classes = [];
+export function extractAttributeValue({ html = '', tag = '', attribute = '', index = 0 } = {}) {
+    if (!html || !attribute) return null;
 
-    if (attrs.backgroundColor) {
-        classes.push(`bg-${attrs.backgroundColor}`);
+    // If a specific tag is requested, match only that tag’s opening
+    if (tag) {
+        const tagRegex = new RegExp(`<${tag}[^>]*>`, 'i');
+        const match = html.match(tagRegex);
+        if (!match) return null;
+
+        const attrRegex = new RegExp(`${attribute}\\s*=\\s*(['"])(.*?)\\1`, 'gi');
+        const attrMatches = [...match[0].matchAll(attrRegex)];
+        return attrMatches[index]?.[2] || null;
     }
 
-    if (attrs.textColor) {
-        classes.push(`text-${attrs.textColor}`);
-    }
+    // Otherwise: fallback to original logic
+    const pattern = `${attribute}\\s*=\\s*(['"])(.*?)\\1`;
+    const regex = new RegExp(pattern, 'gi');
+    const matches = [...html.matchAll(regex)];
 
-    if (attrs.fontSize) {
-        classes.push(`text-${attrs.fontSize}`);
-    }
-
-    return classes;
+    return matches[index]?.[2] || null;
 }
 
-export function stripParagraphWrapper(html = '') {
-    return html
-        .trim()
-        .replace(/^<p[^>]*>/i, '')
-        .replace(/<\/p>$/i, '')
-        .trim();
+
+export function preprocessBlock(block) {
+    const blockWrapperTags = {
+        'core/list-item': 'li',
+        'core/paragraph': 'p'
+    };
+
+    return {
+        ...block,
+        wrapperTag: blockWrapperTags[block.blockName] || '',
+    };
 }

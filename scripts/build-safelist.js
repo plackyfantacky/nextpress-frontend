@@ -71,6 +71,16 @@ function extractClassNamesFromBlockJSON(blocksJSON) {
                     .forEach(cls => classNames.add(cls));
             }
 
+            // Extract style="width: ..." from innerHTML
+            const styleMatches = innerHTML.match(/style="([^"]+)"/g) || [];
+            for (const styleMatch of styleMatches) {
+                const styleContent = styleMatch.replace(/^style="/, '').replace(/"$/, '');
+                const widthMatch = styleContent.match(/width:\s*([\d.]+(px|rem|em|%)?)/);
+                if (widthMatch) {
+                    classNames.add(`w-[${widthMatch[1]}]`);
+                }
+            }
+
             walk(innerBlocks);
         }
     }
@@ -87,22 +97,7 @@ function extractClassNamesFromBlockJSON(blocksJSON) {
     return Array.from(classNames);
 }
 
-function extractTailwindColorTokens(cssPath) {
-    const css = fs.readFileSync(cssPath, 'utf8');
-    const colorTokens = [];
-
-    const themeBlock = css.match(/@theme\s+static\s*{([\s\S]*?)}/);
-    if (themeBlock) {
-        const varMatches = themeBlock[1].matchAll(/--color-([\w-]+):\s*[^;]+;/g);
-        for (const match of varMatches) {
-            colorTokens.push(match[1]); // just the token name, e.g. inkwell-inception
-        }
-    }
-
-    return colorTokens;
-}
-
-async function runSafelistBuild() {
+async function main() {
     console.log('🔄 Fetching block data...');
     const blockJSONs = await fetchAllPageBlockJSON();
 
@@ -116,10 +111,15 @@ async function runSafelistBuild() {
         classNames.add(`border-${token}`);
     }
 
-    const outputPath = path.resolve('./tailwind.safelist.json');
-    fs.writeFileSync(outputPath, JSON.stringify(classNames, null, 2));
+    const outputPath = path.resolve('./src/app/safelist.css');
 
-    console.log(`✅ Wrote ${classNames.length} class names to ${outputPath}`);
+    const lines = classNames
+        .sort()
+        .map(cls => `@source inline("${cls}");`)
+        .join('\n') + '\n';
+
+    fs.writeFileSync(outputPath, lines);
+    console.log(`✅ Wrote ${classNames.length} classes to ${outputPath}`);
 }
 
 const isWatchMode = process.argv.includes('--watch');
@@ -135,4 +135,6 @@ if (isWatchMode) {
     });
 }
 
-runSafelistBuild()
+
+main();
+

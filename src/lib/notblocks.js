@@ -44,283 +44,40 @@ export function renderBlock(block, keyPrefix = 'block', postContext = {}) {
 
     switch (blockName) {
 
-        //cover block
-        case 'core/cover': { }
-
-        //group/column/row block
-        case 'core/group': { }
-
-        //columns (and column) block
-        case 'core/columns': { }
-
-        case 'core/column': { }
-
-        //post title block
-        case 'core/post-title': {
-            const {
-                level = 2,
-                isLink = false,
-                className = '' //explicably set by the user in the editor
-            } = attrs;
-
-            const Tag = `h${level >= 1 && level <= 6 ? level : 2}`;
-
-            const title = postContext?.postTitle || 'Untitled';
-
-            const titleNode = isLink ? (
-                <a href={postContext?.postUrl || '#'}>{title}</a>
-            ) : (
-                title
-            );
-
-            const finalClassNames = joinClassNames('post-title', `text-${Tag}`, className); //special case: this block has no blockClassName 
-
-            return (
-                <Tag key={key} className={`${finalClassNames}`}>{titleNode}</Tag>
-            );
-        }
-
-        //heading block
-        case 'core/heading': {
-            const {
-                level = 2,
-                tagName = `h${level >= 1 && level <= 6 ? level : 2}`,
-                className = '' //explicably set by the user in the editor
-            } = attrs;
-
-            const Tag = tagName || `h${level}`;
-
-            const finalClassNames = joinClassNames(blockClassName, `text-${Tag}`, className);
-
-            return (
-                <Tag key={key} className={finalClassNames}>
-                    {text}
-                </Tag>
-            );
-        }
-
-        //paragraph block
-        case 'core/paragraph': {
-            const {
-                tagName = 'p',
-                className = '' //explicably set by the user in the editor
-            } = attrs;
-
-            const Tag = tagName || 'p';
-
-            const finalClassNames = joinClassNames(blockClassName, className);
-
-            return <Tag key={key} className={finalClassNames}>{text}</Tag>;
-        }
-
-        //blockquote block
-        case 'core/quote': {
-            const {
-                className = '',
-                wrapWithInnerDiv = false,
-            } = attrs;
-
-            const blockClassName = 'quote-block';
-
-            const styleClasses = mapQuoteStyles(attrs);
-            const finalClassNames = joinClassNames(blockClassName, className, ...styleClasses);
-
-            const children = innerBlocks.map((block, i) =>
-                renderBlock(block, `${keyPrefix}-quote-${i}`, postContext)
-            );
-
-            const citeText = extractCiteText(innerContent || []);
-            const quoteBody = (
-                <>
-                    {children}
-                    {citeText && <cite>{citeText}</cite>}
-                </>
-            );
-
-            return (
-                <blockquote key={key} className={finalClassNames}>
-                    {wrapWithInnerDiv ? <div className="inner">{quoteBody}</div> : quoteBody}
-                </blockquote>
-            );
-        }
 
         //code block
         case 'core/code': {
-            const { className = '' } = attrs;
-
-            const blockClassName = 'code-block';
-            const finalClassNames = joinClassNames(blockClassName, className, 'hljs');
-
-            const codeHTML = innerHTML?.match(/<code[^>]*>(.*?)<\/code>/s)?.[1] || '';
-            const highlightedJSX = renderHighlightedCode(codeHTML);
-
-            return (
-                <pre key={key} className={finalClassNames}>
-                    <code>{highlightedJSX}</code>
-                </pre>
-            );
+            
         }
 
         //preformated text block
         case 'core/preformatted': {
-            const { className = '' } = attrs;
-
-            const blockClassName = 'preformatted-block';
-            const finalClassNames = joinClassNames(blockClassName, className, 'whitespace-pre-wrap');
-
-            const raw = innerHTML
-                ?.replace(/<\/?pre[^>]*>/g, '')
-                ?.trimStart() || '';
-
-            return (
-                <pre key={key} className={finalClassNames}>{raw}</pre>
-            );
+            
         }
 
         //list block
         case 'core/list': {
-            const { ordered = false, type = null, className = '' } = attrs;
-            const Tag = ordered ? 'ol' : 'ul';
 
-            const currentLevel = postContext?.listLevel || 1;
-            const nextContext = {
-                ...postContext,
-                listLevel: currentLevel + 1
-            };
-
-            // Optional list-style-type override
-            const typeClass = type ? `list-${type}` : '';
-            const finalClassNames = joinClassNames(
-                'list-block',
-                `level-${currentLevel}`,
-                typeClass,
-                className);
-
-            return (
-                <Tag key={key} className={finalClassNames}>
-                    {innerBlocks.map((child, i) =>
-                        renderBlock(child, `${keyPrefix}-list-item-${i}`, nextContext)
-                    )}
-                </Tag>
-            );
         }
 
         //list item block
         case 'core/list-item': {
-            const content = innerHTML
-                ?.replace(/^<li[^>]*>/, '')
-                ?.replace(/<\/li>$/, '')
-                ?.trim();
 
-            return (
-                <li key={key} className="list-item-block">
-                    {renderInlineHTML(innerHTML?.replace(/<\/?li[^>]*>/g, '') || '')}
-                    {innerBlocks.map((child, i) =>
-                        renderBlock(child, `${keyPrefix}-nested-${i}`, postContext)
-                    )}
-                </li>
-
-            );
         }
 
         //table block
         case 'core/table': {
-            const { hasFixedLayout = false, className = '' } = attrs;
-
-            const tableClassName = joinClassNames(
-                'table-block',
-                hasFixedLayout ? 'table-fixed' : '',
-                className
-            );
-
-            const extractSection = (html, tag) => {
-                const match = html.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
-                return match ? match[1] : '';
-            };
-
-            const parseRows = (htmlSection) => {
-                const rowMatches = htmlSection.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [];
-
-                return rowMatches.map((row, i) => {
-                    const cells = [...row.matchAll(/<(td|th)[^>]*>([\s\S]*?)<\/\1>/gi)];
-                    return (
-                        <tr key={`row-${i}`}>
-                            {cells.map(([_, type, content], j) => {
-                                const Tag = type.toLowerCase();
-                                return (
-                                    <Tag key={`cell-${i}-${j}`}>
-                                        {renderInlineHTML(content.trim())}
-                                    </Tag>
-                                );
-                            })}
-                        </tr>
-                    );
-                });
-            };
-
-            const caption = innerHTML.match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/i)?.[1] || '';
-            const thead = parseRows(extractSection(innerHTML, 'thead'));
-            const tbody = parseRows(extractSection(innerHTML, 'tbody'));
-            const tfoot = parseRows(extractSection(innerHTML, 'tfoot'));
-
-            return (
-                <figure key={key} className={tableClassName}>
-                    <table>
-                        {thead.length > 0 && <thead>{thead}</thead>}
-                        {tbody.length > 0 && <tbody>{tbody}</tbody>}
-                        {tfoot.length > 0 && <tfoot>{tfoot}</tfoot>}
-                    </table>
-                    {caption && <figcaption>{renderInlineHTML(caption.trim())}</figcaption>}
-                </figure>
-            );
+            
         }
 
         //pullquote block
         case 'core/pullquote': {
-            const { className = '' } = attrs;
-            const blockClassName = 'pullquote-block';
-            const finalClassNames = joinClassNames(blockClassName, className);
-
-            // Extract <p> and <cite> content from innerHTML
-            const quoteMatch = innerHTML.match(/<blockquote[^>]*>\s*<p>([\s\S]*?)<\/p>/i);
-            const citeMatch = innerHTML.match(/<cite[^>]*>([\s\S]*?)<\/cite>/i);
-
-            const quoteHTML = quoteMatch?.[1]?.trim() || '';
-            const citeText = citeMatch?.[1]?.trim() || '';
-
-            return (
-                <figure key={key} className={finalClassNames}>
-                    <blockquote>
-                        <p>{renderInlineHTML(quoteHTML)}</p>
-                        {citeText && <cite>{citeText}</cite>}
-                    </blockquote>
-                </figure>
-            );
+            
         }
 
         //details/summary block
         case 'core/details': {
-            const {
-                className = '',
-                showContent = false,
-            } = attrs;
-
-            const blockClassName = 'details-block';
-            const finalClassNames = joinClassNames(blockClassName, className);
-
-            const summaryMatch = innerHTML.match(/<summary[^>]*>([\s\S]*?)<\/summary>/i);
-            const summaryText = summaryMatch?.[1]?.trim() || 'Details';
-
-            return (
-                <details key={key} className={finalClassNames} open={showContent}>
-                    <summary>{renderInlineHTML(summaryText)}</summary>
-                    <div className={`${blockClassName}--content`}>
-                        {innerBlocks.map((child, i) =>
-                            renderBlock(child, `${keyPrefix}-details-${i}`, postContext)
-                        )}
-                    </div>
-                </details>
-            );
+            
 
         }
 
@@ -338,7 +95,7 @@ export function renderBlock(block, keyPrefix = 'block', postContext = {}) {
             const blockClassName = 'media-text-block';
             const alignmentClass = `media-text--${mediaPosition}`;
             const fillClass = imageFill ? 'media-text--fill' : '';
-            const finalClassNames = joinClassNames(
+            const blockClassNames = joinClassNames(
                 blockClassName,
                 alignmentClass,
                 fillClass,
@@ -374,7 +131,7 @@ export function renderBlock(block, keyPrefix = 'block', postContext = {}) {
             }
 
             return (
-                <div key={key} className={finalClassNames}>
+                <div key={key} className={blockClassNames}>
                     <figure className="media-text-media">
                         {mediaLink ? (
                             <a href={mediaLink} target="_blank" rel="noopener noreferrer">

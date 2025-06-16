@@ -1,80 +1,81 @@
 import React from "react";
-import { contentPositionToTailwind, joinClassNames, withConditionalInnerWrapper } from "../utils";
+import { normaliseClassNames, contentPositionToTailwind, extractAttributeValue, joinClassNames, withConditionalInnerWrapper } from "@/lib/utils";
 
 export default function BlockCover({ block, keyPrefix, postContext, children }) {
-    const { attrs, blockClassName, innerHTML } = block;
+    const { attrs = {}, idAttribute = '', blockClassName = '', innerHTML = ''} = block;
     const {
-        url,
+        minHeight = 300,
+        minHeightUnit = 'px',
+        //style = {}, TODO: handle style object (it should only be drop shadows but their format is weird)
         alt,
-        id,
+        url = '', // this is the image URL, if not using featured image
         useFeaturedImage = false,
-        hasParallax,
-        isRepeated,
-        dimRatio = 50,
-        overlayColor,
-        isUserOverlayColor,
-        focalPoint,
-        contentPosition = 'center center',
-        tagName = 'section',
-        className = '', //explicably set by the user in the editor
-        sizeSlug,
-        align,
-        layout = {}
+        customOverlayColor = '', // this is not output in innerHTML, so process it directly
+        dimRatio = 50, // append to bg- classes
+        focalPoint = { x: 0.5, y: 0.5 },
+        contentPosition = 'center center', // this is not output in innerHTML, so process it directly. order is vertical horizontal.
+        tagName: Tag = 'section', // this is not output in innerHTML, so process it directly
     } = attrs;
 
-    const Tag = tagName;
-    const positionClass = contentPositionToTailwind(contentPosition);
+    let normalisedImageClasses = normaliseClassNames(extractAttributeValue({ html: innerHTML, attribute: 'class', tag: 'div', index: 1 }) || '');
+    let normalisedOverlayClasses = normaliseClassNames(extractAttributeValue({ html: innerHTML, attribute: 'class', tag: 'span' }) || '');
+    let normalisedPositioningClasses = contentPositionToTailwind(contentPosition);
 
-    let bgColour = overlayColor ? (`bg-${overlayColor}` + (dimRatio ? `/${dimRatio}` : '')) : '';
+    const imageURL = (useFeaturedImage ? postContext?.postImage : url) || '';
+    const minHeightValue = `${minHeight}${minHeightUnit}`; // there will always be a minHeight and minHeightUnit (default params)
 
-    const overlayClasses = joinClassNames(
-        'cover-overlay',
-        !isUserOverlayColor && overlayColor ? `bg-${overlayColor || 'black'}`: '',
-        bgColour,
-        'absolute inset-0 z-10 pointer-events-none',
+    //if focalPoint is something other than { x: 0.5, y: 0.5 }, then we need to set the background position as a tailwind class
+    const focalPointClass = focalPoint && (focalPoint.x !== 0.5 || focalPoint.y !== 0.5) ? `bg-position-[${focalPoint.x * 100}%_${focalPoint.y * 100}%]` : '';
+
+    // TODO: Tailwind 4.1 prefers bg-<color>/<opacity_as_percentage> but custom colors can be used yet.
+    // if dimRatio is not 0, then we need to set the opactity as a tailwind class. WP uses between 0 and 1 (e.g 0.5) but Tailwind uses 0-100 (e.g. 50).
+    // also bg-opacity- doesn't exist anymore. Convert dimRatio decimal to percentage and output `opacity-<dimRatio>`
+    // if dimRatio is missing, return empty string
+    
+    const dimRatioValue = dimRatio !== undefined && dimRatio !== 100 ? Math.round(dimRatio) : 100; // ensure dimRatio is a number between 0 and 100
+    const dimRatioClass = dimRatioValue !== 100 ? `opacity-${dimRatioValue}` : ''; // Tailwind 4.1 prefers bg-<color>/<opacity_as_percentage> but custom colors can be used yet.
+
+    const blockContainerClasses = joinClassNames(
+        blockClassName,
+        normalisedPositioningClasses,
+        'relative flex flex-col @container/cover'
     );
 
-    const overlayStyle = {
-        ...(dimRatio > 0 ? { opacity: dimRatio / 100 } : {}),
-        ...(isUserOverlayColor && overlayColor ? { backgroundColor: overlayColor } : {})
+    const blockContainerStyle = {
+        minHeight: minHeightValue,
+        //style, // TODO: handle style object (it should only be drop shadows but their format is weird)
     };
 
-    const imageURL = useFeaturedImage ? postContext?.postImage : url;
-
-    const bgStyle = {
-        backgroundImage: imageURL ? `url(${imageURL})` : undefined,
-        backgroundPosition: focalPoint ? `${focalPoint.x * 100}% ${focalPoint.y * 100}%` : undefined,
-    }
-
-    const imageClasses = joinClassNames(
+    const blockImageClasses = joinClassNames(
         'cover-image',
-        id ? `asset-${id || 'default'}` : '',
-        sizeSlug ? `image-${sizeSlug}` : '',
-        hasParallax ? 'parallax' : '',
-        isRepeated ? 'bg-repeat' : 'bg-cover',
-        'absolute inset-0 z-0',
+        normalisedImageClasses,
+        focalPointClass,
+        'absolute inset-0 z-0 flex w-full h-full',
     );
 
-    const containerClass = joinClassNames(
-        blockClassName,
-        className,
-        align ? `align-${align || 'center'}` : '',
-        hasParallax ? 'parallax' : '',
-        isRepeated ? 'bg-repeat' : 'bg-cover',
-        positionClass,
-        'relative flex items-center justify-center min-h-[200px] min-w-full overflow-hidden',
+    const blockImageStyle = {
+        ...imageURL ? { backgroundImage: `url(${imageURL})` } : {},
+    };
+
+    const blockOverlayClasses = joinClassNames(
+        'cover-overlay',
+        normalisedOverlayClasses,
+        dimRatioClass,
+        'absolute inset-0 z-[1] pointer-events-none',
     );
-    
-    const finalClassNames = joinClassNames(blockClassName, contentPositionToTailwind(contentPosition), className);
+
+    const blockOverlayStyle = customOverlayColor ? { backgroundColor: customOverlayColor } : {};
+
+    const blockContentClasses = joinClassNames(
+        'cover-content',
+         'flex flex-col relative z-[2]',
+    );
 
     return (
-        <Tag key={keyPrefix} className={containerClass}>
-            {imageURL && (
-                <div role="img" aria-label={alt || ''} className={imageClasses} style={bgStyle} />
-            )}
-            <span aria-hidden="true" className={overlayClasses} style={overlayStyle} />
-
-            {withConditionalInnerWrapper(children, innerHTML, blockClassName)}
+        <Tag key={keyPrefix} className={blockContainerClasses} {...(blockContainerStyle ? { style: blockContainerStyle } : {})} {...( idAttribute ? { id: idAttribute } : {} )}>
+            <div role="img" aria-label={alt || ''} className={blockImageClasses} {...(blockImageStyle ? { style: blockImageStyle } : {})} />
+            <span aria-hidden="true" className={blockOverlayClasses} {...(blockOverlayStyle ? { style: blockOverlayStyle } : {})} />
+            { withConditionalInnerWrapper(children, innerHTML, blockClassName, blockContentClasses) }
         </Tag>
     );
 }

@@ -1,18 +1,14 @@
 import React from "react";
-import { joinClassNames, withConditionalInnerWrapper } from "../utils";
+import { joinClassNames, withConditionalInnerWrapper } from "@/lib/utils";
 
-export default function BlockColumn({ block, keyPrefix, postContext, children }) {
-    const { attrs, blockClassName, innerHTML } = block;
-    const {
-        tagName = 'div',
-        className = '' //explicably set by the user in the editor
-    } = attrs;
+export default function BlockColumn({ block, keyPrefix, children }) {
+    const { attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = ''} = block;
+    const { tagName: Tag = 'div' } = attrs;
 
-    const Tag = tagName || 'div';
-    const finalClassNames = joinClassNames(blockClassName, className);
+    const blockClassNames = joinClassNames(blockClassName, normalisedClassNames);
 
     return (
-        <Tag key={keyPrefix} className={finalClassNames} >
+        <Tag key={keyPrefix} className={blockClassNames} {...( idAttribute ? { id: idAttribute } : {} )}>
             {withConditionalInnerWrapper(children, innerHTML, blockClassName)}
         </Tag>
     );

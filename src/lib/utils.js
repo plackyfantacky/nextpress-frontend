@@ -1,12 +1,12 @@
 /**
  * Normalizes a list of class names by removing duplicates, filtering out WordPress-specific classes,
  * and converting WordPress-style classes to Tailwind CSS equivalents.
- * @param {string} classList - The class list string to normalize.
+ * @param {string} classList - The class list string to normalise.
  * @param {Object} options - Options for normalization.
  * @param {boolean} options.convert - Whether to convert WordPress-style classes to Tailwind CSS equivalents.
- * @returns {string} A normalized class list string suitable for use with Tailwind CSS.
+ * @returns {string} A normalised class list string suitable for use with Tailwind CSS.
  */
-export function normalizeClassNames(classList = '', { convert = true } = {}) {
+export function normaliseClassNames(classList = '', { convert = true } = {}) {
     const seen = new Set();
 
     //console.log('BEFORE', classList);
@@ -66,7 +66,7 @@ export function normalizeClassNames(classList = '', { convert = true } = {}) {
                         .replace('text-', '')
                         .replace('-font-size', '');
                 }
-                
+
                 // Map WP font sizes to Tailwind CSS equivalents
                 const sizeMap = {
                     'small': 'sm',
@@ -81,8 +81,8 @@ export function normalizeClassNames(classList = '', { convert = true } = {}) {
                 //check the strin and remove any "text-" prefix and any subsequent dashes
                 size = size
                     .replace('text-', '')
-                    .replace(/-/g, '')
-                
+                    .replace(/-/g, '');
+
                 return `text-${size}`;
             }
 
@@ -120,14 +120,17 @@ export function normalizeClassNames(classList = '', { convert = true } = {}) {
             // Convert WP alignments to Tailwind CSS float classes
             if (cls.startsWith('align')) {
                 const align = cls.slice(5);
-                if (align === 'left') return 'float-left mr-4 mb-4';
-                if (align === 'right') return 'float-right ml-4 mb-4';
-                if (align === 'center') return 'mx-auto';
-                if (align === 'wide') return 'mx-auto'; // Example for wide alignment
-                if (align === 'full') return 'w-full'; // Example for full width
+                // TODO: left, right, and center are acceptable currently, but don't allow wraping
+                if (align === 'left') return 'self-start mr-4 mb-4';
+                if (align === 'right') return 'self-end ml-4 mb-4';
+                if (align === 'center') return 'self-center mx-auto';
+                // TODO: haven't tested these with images/figures. They do work with group-blocks.
+                if (align === 'wide') return 'w-wide mx-auto'; // Example for wide alignment
+                if (align === 'full') return 'w-[100cqw]'; // Example for full width. I don't know if this is genius or madness, but it works.
             }
 
             // Convert WP position variants to Tailwind CSS flex classes
+            // TODO: check blockGroup for an inline function that may need to come here. Untested: What happens if the flex-direction is changed?
             if (cls.startsWith('is-position-')) {
                 const [vertical, horizontal] = cls.split(' ');
 
@@ -153,7 +156,7 @@ export function normalizeClassNames(classList = '', { convert = true } = {}) {
             if (cls === 'is-repeated') return 'bg-repeat';
 
             // Generic has-background
-            if (cls === 'has-background') return 'bg-opacity-100';
+            if (cls === 'has-background') return 'opacity-100';
 
             // Convert WP size classes to Tailwind CSS media classes
             if (cls.startsWith('size-')) {
@@ -170,11 +173,51 @@ export function normalizeClassNames(classList = '', { convert = true } = {}) {
 }
 
 /**
- * Convert blockName from "core/paragraph" to "paragraph"
- * @param {string} blockName - The block name to normalize.
- * @returns {string} The normalized block name, e.g. "paragraph" or "cover".
+ * Some blocks dont have innerHTML, but have classNames and other style properties in block attributes.
  */
-export function normalizeBlockName(blockName = '') {
+export function normaliseClassNamesFromAttributes(attrs) {
+    if (!attrs || typeof attrs !== 'object') return '';
+    const { className = '', style = {} } = attrs;
+
+    let normalisedClassNames = '';
+
+    /*
+       rollcall for potential classNames:
+        - backgroundColor
+        - textColor
+        - fontSize
+        - fontFamily
+
+        also be careful:
+
+        - style.typography - letterSpacing
+        - style.layout - selfStretch, flexSize
+    */
+
+    const classNames = [];
+
+    if (attrs.backgroundColor) { classNames.push(`bg-${attrs.backgroundColor}`); }
+    if (attrs.textColor) { classNames.push(`text-${attrs.textColor}`); }
+    if (attrs.fontSize) { classNames.push(`text-${attrs.fontSize}`); }
+    if (attrs.fontFamily) { classNames.push(`font-${attrs.fontFamily}`); }
+
+    // Convert style properties to Tailwind CSS classes
+    if (style?.typography?.letterSpacing) { classNames.push(`tracking-[${style.typography.letterSpacing}]`); }
+
+    // TODO: check these are valid properties.
+    //if (style?.layout?.selfStretch) { classNames.push('self-stretch'); }
+    //if (style?.layout?.flexSize) { classNames.push(`flex-${style.layout.flexSize}`); } 
+
+    return joinClassNames(className, normalisedClassNames, ...classNames);
+}
+
+
+/**
+ * Convert blockName from "core/paragraph" to "paragraph"
+ * @param {string} blockName - The block name to normalise.
+ * @returns {string} The normalised block name, e.g. "paragraph" or "cover".
+ */
+export function normaliseBlockName(blockName = '') {
     if (typeof blockName !== 'string') return '';
     return blockName.replace(/^core\//, '') + '-block'; // Append "-block" to match the convention used in block renderers
 }
@@ -187,21 +230,19 @@ export function normalizeBlockName(blockName = '') {
  */
 export function contentPositionToTailwind(pos) {
     // WordPress uses e.g. "center left", "top right", etc.
+    // assume the flex container is a column
     const [vertical, horizontal] = pos.split(' ');
 
-    const justify = {
-        left: 'justify-start',
-        center: 'justify-center',
-        right: 'justify-end',
-    }[horizontal] || 'justify-center';
+    //console.log(pos);
 
-    const align = {
-        top: 'items-start',
-        center: 'items-center',
-        bottom: 'items-end',
-    }[vertical] || 'items-center';
+    const direction = {
+        left: 'start',
+        center: 'center',
+        right: 'end',
+    };
 
-    return `flex ${justify} ${align}`;
+    return `flex items-${direction[horizontal] || 'center'} justify-${direction[vertical] || 'center'}`;
+
 }
 
 /**
@@ -243,34 +284,12 @@ export function withConditionalInnerWrapper(children, innerHTML = '', blockName 
 }
 
 /**
- * Strips the <figcaption> element from a given HTML string.
- * This is useful for removing captions from figure blocks when only the image or content is needed.
- * @param {string} html - The HTML string to process.
- * @returns {string} The HTML string without the <figcaption> element.
- */
-export function stripFigcaption(html = '') {
-    return html.replace(/<figcaption[^>]*>[\s\S]*?<\/figcaption>/i, '').trim();
-}
-
-/**
- * Extracts the body content of a <figure> element from a given HTML string.
- * This is useful for isolating the main content of a figure block, excluding any caption.
- * @param {string} html - The HTML string to search within.
- * @returns {string} The body content of the <figure> element, or the original HTML if not found.
- */
-export function extractFigureBody(html = '') {
-    const match = html.match(/<figure[^>]*>([\s\S]*?)<\/figure>/i);
-    if (!match) return html; // fallback
-    return match[1].trim();
-}
-
-/**
  * Normalizes the class list of a figure element by removing duplicates and converting WordPress-specific classes to Tailwind CSS equivalents.
- * @param {string} classList - The class list string to normalize.
- * @returns {string} A normalized class list string suitable for use with Tailwind CSS.
+ * @param {string} classList - The class list string to normalise.
+ * @returns {string} A normalised class list string suitable for use with Tailwind CSS.
  * This function filters out WordPress-specific classes like 'wp-block-image' and 'is-resized', and converts alignment and size classes to Tailwind equivalents.
  */
-export function normalizeFigureClasses(classList = '') {
+export function normaliseFigureClasses(classList = '') {
     const seen = new Set();
     const classNames = classList.split(/\s+/);
 
@@ -299,19 +318,6 @@ export function normalizeFigureClasses(classList = '') {
 }
 
 /**
- * Strips the <p> wrapper from a given HTML string.
- * @param {string} html - The HTML string to process.
- * @returns {string} The HTML string without the <p> wrapper.
- */
-export function stripParagraphWrapper(html = '') {
-    return html
-        .trim()
-        .replace(/^<p[^>]*>/i, '')
-        .replace(/<\/p>$/i, '')
-        .trim();
-}
-
-/**
  * Parses the width from a CSS style string.
  * @param {string} style - The CSS style string to parse.
  * @returns {string|null} The width value if found, otherwise null.
@@ -322,15 +328,26 @@ export function parseWidthFromStyle(style = '') {
 }
 
 /**
- * Extracts the text content from a specific HTML tag.
+ * Extracts the first occurrence of a specific HTML tag from a string.
  * @param {string} html - The HTML string to search within.
- * @param {string} tag - The tag name to extract text from (e.g., 'p', 'div').
- * @returns {string|null} The text content of the specified tag, or null if not found.
+ * @param {string} tag - The tag name to extract (e.g., 'p', 'div').
+ * @returns {string|null} The first occurrence of the specified tag, or null if not found.
  */
-export function extractTextFromTag(html = '', tag = '') {
-    const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i');
-    const match = html.match(regex);
-    return match ? match[1].trim() : null;
+export function extractTag(html = '', tag = '', contentOnly = true, asString = true) {
+    if (!html || !tag) return null;
+
+    //const tagRegex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'gi');
+    const tagRegex = new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'gi');
+    const matches = [...html.matchAll(tagRegex)];
+
+    if (matches.length === 0) return null;
+
+    if (asString === false) {
+        return matches.map(m => (contentOnly ? m[1].trim() : m[0].trim()));
+    }
+
+    // Legacy behavior — return only first match
+    return contentOnly ? matches[0][1].trim() : matches[0][0].trim();
 }
 
 /**
@@ -341,15 +358,37 @@ export function extractTextFromTag(html = '', tag = '') {
  * @param {number} index - The index of the match to return (default is 1, for the first match).
  * @returns {string|null} The value of the specified attribute, or null if not found.
  */
-export function extractAttributeValue({html = '', tag = '', attribute = '', index = 0} = {}) {
+export function extractAttributeValue({ html = '', tag = '', attribute = '', index = 0 } = {}) {
     if (!html || !attribute) return null;
 
-    const pattern = tag
-        ? `<${tag}[^>]*\\s${attribute}\\s*=\\s*(['"])(.*?)\\1`
-        : `${attribute}\\s*=\\s*(['"])(.*?)\\1`;
+    // If a specific tag is requested, match only that tag’s opening
+    if (tag) {
+        const tagRegex = new RegExp(`<${tag}[^>]*>`, 'i');
+        const match = html.match(tagRegex);
+        if (!match) return null;
 
-    const regex = new RegExp(pattern, 'gi'); // global + case-insensitive
+        const attrRegex = new RegExp(`${attribute}\\s*=\\s*(['"])(.*?)\\1`, 'gi');
+        const attrMatches = [...match[0].matchAll(attrRegex)];
+        return attrMatches[index]?.[2] || null;
+    }
+
+    // Otherwise: fallback to original logic
+    const pattern = `${attribute}\\s*=\\s*(['"])(.*?)\\1`;
+    const regex = new RegExp(pattern, 'gi');
     const matches = [...html.matchAll(regex)];
 
     return matches[index]?.[2] || null;
+}
+
+
+export function preprocessBlock(block) {
+    const blockWrapperTags = {
+        'core/list-item': 'li',
+        'core/paragraph': 'p'
+    };
+
+    return {
+        ...block,
+        wrapperTag: blockWrapperTags[block.blockName] || '',
+    };
 }

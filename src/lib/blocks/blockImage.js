@@ -1,59 +1,48 @@
 import React from 'react';
-import {
-    joinClassNames,
-    extractTextFromTag,
-    extractFigureBody,
-    extractAttributeValue,
-    stripFigcaption,
-    normalizeFigureClasses,
-    parseWidthFromStyle
-} from '../utils';
-import { renderInlineHTML } from '../parser';
-import Lightbox from '@/components/Lightbox';
+import { joinClassNames, extractTag, extractAttributeValue, parseWidthFromStyle } from "@/lib/utils";
+import { Figure } from '@/components/Elements';
 
 export default function BlockImage({ block, keyPrefix }) {
-    const { attrs = {}, blockClassName = '', extractedClassNames = '', innerHTML = '' } = block;
-    const {
-        width,
-        height,
-        scale,
-        aspectRatio,
-        linkDestination,
-    } = attrs;
+    const { attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = ''} = block;
+    const { lightbox = { enabled: false }  } = attrs;
 
-    const isLightboxEnabled = attrs?.lightbox?.enabled === true;
+    //get the contents of the figure tag from the innerHTML - we're rebuilding it from scratch
+    const figureBody = extractTag(innerHTML, 'figure', true) || '';
 
-    const figureBody = extractFigureBody(innerHTML);
-    const figure = stripFigcaption(figureBody);
-    const rawFigureClass = normalizeFigureClasses(extractAttributeValue({ html: innerHTML, tag: 'figure', attribute: 'class' }));
-
+    // The internal img element
     const imgSrc = extractAttributeValue({ html: figureBody, attribute: 'src' });
     const imgAlt = extractAttributeValue({ html: figureBody, attribute: 'alt' });
+    const imgWidth = attrs.width || parseWidthFromStyle(figureBody);
+    const imgHeight = attrs.height || '';
+    let imgID = idAttribute || '';
 
-    const imgWidth = width || parseWidthFromStyle(figureBody);
+    let linkHref;
+    if(attrs.linkDestination && attrs.linkDestination !== 'none') {
+        // If the image is linked, we need to wrap it in a link element. to do that we need to extract the link attributes
+        linkHref = extractAttributeValue({ html: figureBody, attribute: 'href' });
+    }
 
-    const figureClass = joinClassNames(
+    const figureClasses = joinClassNames(
         blockClassName,
-        normalizeFigureClasses(rawFigureClass),
+        normalisedClassNames,
         imgWidth ? `w-[${imgWidth}]` : '',
     );
 
-    const caption = extractTextFromTag(innerHTML, 'figcaption');
-
+    // The figcaption element (if any)
+    const caption = extractTag(innerHTML, 'figcaption', true) || '';
+   
     return (
-        <figure key={keyPrefix} className={figureClass}>
-            {isLightboxEnabled ? (
-                <Lightbox src={imgSrc} alt={imgAlt} id="lightbox-1" />
-            ) : (
-                renderInlineHTML(figure, {
-                    context: {
-                        lightbox: false,
-                        imageAttrs: { width, height, scale, aspectRatio }
-                    }
-                })
-            )}
-            {caption && <figcaption className="max-w-full break-words">{renderInlineHTML(caption)}</figcaption>}
-        </figure>
+        <Figure
+            key={`${keyPrefix}-figure`}
+            src={imgSrc}
+            alt={imgAlt}
+            width={imgWidth}
+            height={imgHeight}
+            imgID={imgID}
+            figureClassNames={figureClasses}
+            caption={caption}
+            lightbox={lightbox.enabled}
+            {...( linkHref ? { linkHref: linkHref } : {})}
+        />
     );
-
 }

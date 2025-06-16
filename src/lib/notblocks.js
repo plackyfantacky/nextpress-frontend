@@ -47,133 +47,27 @@ export function renderBlock(block, keyPrefix = 'block', postContext = {}) {
 
         //code block
         case 'core/code': {
-            const { className = '' } = attrs;
-
-            const blockClassName = 'code-block';
-            const blockClassNames = joinClassNames(blockClassName, className, 'hljs');
-
-            const codeHTML = innerHTML?.match(/<code[^>]*>(.*?)<\/code>/s)?.[1] || '';
-            const highlightedJSX = renderHighlightedCode(codeHTML);
-
-            return (
-                <pre key={key} className={blockClassNames}>
-                    <code>{highlightedJSX}</code>
-                </pre>
-            );
+            
         }
 
         //preformated text block
         case 'core/preformatted': {
-            const { className = '' } = attrs;
-
-            const blockClassName = 'preformatted-block';
-            const blockClassNames = joinClassNames(blockClassName, className, 'whitespace-pre-wrap');
-
-            const raw = innerHTML
-                ?.replace(/<\/?pre[^>]*>/g, '')
-                ?.trimStart() || '';
-
-            return (
-                <pre key={key} className={blockClassNames}>{raw}</pre>
-            );
+            
         }
 
         //list block
         case 'core/list': {
-            const { ordered = false, type = null, className = '' } = attrs;
-            const Tag = ordered ? 'ol' : 'ul';
 
-            const currentLevel = postContext?.listLevel || 1;
-            const nextContext = {
-                ...postContext,
-                listLevel: currentLevel + 1
-            };
-
-            // Optional list-style-type override
-            const typeClass = type ? `list-${type}` : '';
-            const blockClassNames = joinClassNames(
-                'list-block',
-                `level-${currentLevel}`,
-                typeClass,
-                className);
-
-            return (
-                <Tag key={key} className={blockClassNames}>
-                    {innerBlocks.map((child, i) =>
-                        renderBlock(child, `${keyPrefix}-list-item-${i}`, nextContext)
-                    )}
-                </Tag>
-            );
         }
 
         //list item block
         case 'core/list-item': {
-            const content = innerHTML
-                ?.replace(/^<li[^>]*>/, '')
-                ?.replace(/<\/li>$/, '')
-                ?.trim();
 
-            return (
-                <li key={key} className="list-item-block">
-                    {renderInlineHTML(innerHTML?.replace(/<\/?li[^>]*>/g, '') || '')}
-                    {innerBlocks.map((child, i) =>
-                        renderBlock(child, `${keyPrefix}-nested-${i}`, postContext)
-                    )}
-                </li>
-
-            );
         }
 
         //table block
         case 'core/table': {
-            const { hasFixedLayout = false, className = '' } = attrs;
-
-            const tableClassName = joinClassNames(
-                'table-block',
-                hasFixedLayout ? 'table-fixed' : '',
-                className
-            );
-
-            const extractSection = (html, tag) => {
-                const match = html.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
-                return match ? match[1] : '';
-            };
-
-            const parseRows = (htmlSection) => {
-                const rowMatches = htmlSection.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [];
-
-                return rowMatches.map((row, i) => {
-                    const cells = [...row.matchAll(/<(td|th)[^>]*>([\s\S]*?)<\/\1>/gi)];
-                    return (
-                        <tr key={`row-${i}`}>
-                            {cells.map(([_, type, content], j) => {
-                                const Tag = type.toLowerCase();
-                                return (
-                                    <Tag key={`cell-${i}-${j}`}>
-                                        {renderInlineHTML(content.trim())}
-                                    </Tag>
-                                );
-                            })}
-                        </tr>
-                    );
-                });
-            };
-
-            const caption = innerHTML.match(/<figcaption[^>]*>([\s\S]*?)<\/figcaption>/i)?.[1] || '';
-            const thead = parseRows(extractSection(innerHTML, 'thead'));
-            const tbody = parseRows(extractSection(innerHTML, 'tbody'));
-            const tfoot = parseRows(extractSection(innerHTML, 'tfoot'));
-
-            return (
-                <figure key={key} className={tableClassName}>
-                    <table>
-                        {thead.length > 0 && <thead>{thead}</thead>}
-                        {tbody.length > 0 && <tbody>{tbody}</tbody>}
-                        {tfoot.length > 0 && <tfoot>{tfoot}</tfoot>}
-                    </table>
-                    {caption && <figcaption>{renderInlineHTML(caption.trim())}</figcaption>}
-                </figure>
-            );
+            
         }
 
         //pullquote block

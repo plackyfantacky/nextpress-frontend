@@ -1,12 +1,12 @@
 import React from "react";
-import { joinClassNames, extractTextFromTag } from "@/lib/utils";
+import { joinClassNames, extractTag } from "@/lib/utils";
 import { renderInlineHTML } from "@/lib/parser";
 
 export default function BlockParagraph({ block, keyPrefix }) {
-    const { idAttribute = '', blockClassName = '', normalizedClassNames = '', innerHTML = '' } = block;
+    const { idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = '' } = block;
 
-    const blockClassNames = joinClassNames(blockClassName, normalizedClassNames);
-    const text = renderInlineHTML(extractTextFromTag(innerHTML, 'p'));
+    const blockClassNames = joinClassNames(blockClassName, normalisedClassNames);
+    const text = renderInlineHTML(extractTag(innerHTML, 'p', true) || '');
 
     return <p key={keyPrefix} {...(blockClassNames ? { className: blockClassNames } : {})} {...(idAttribute ? { id: idAttribute } : {})}>{text}</p>;
 }

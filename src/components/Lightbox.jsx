@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { A, Image } from "@/components/Elements/index";
 import MicroModal from "micromodal";
 
 let initialized = false;
 
-export default function Lightbox({ src, alt, id = "lightbox-modal", className = "" }) {
+export default function Lightbox({ src, alt, width = '', height = '', id = "lightbox-modal", className = "" }) {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -31,9 +32,14 @@ export default function Lightbox({ src, alt, id = "lightbox-modal", className = 
 
     return (
         <>
-            <a href="#" onClick={handleClick}>
-                <img src={src} alt={alt} className={className} />
-            </a>
+            <A onClick={handleClick}>
+                <Image
+                    src={src}
+                    alt={alt}
+                    {...width ? { width } : {} }
+                    {...height ? { height } : {} }
+                    {...(className ? { className } : {})} />
+            </A>
 
             {createPortal(
                 <div
@@ -61,7 +67,7 @@ export default function Lightbox({ src, alt, id = "lightbox-modal", className = 
                             </button>
                             <div className="modal__content max-h-[80vh] overflow-auto">
                                 <h2 id={`${id}-title`} className="sr-only">Image preview</h2>
-                                <img src={src} alt={alt} className="max-w-full object-contain" />
+                                <Image src={src} alt={alt} className="max-w-full object-contain" />
                             </div>
                         </div>
                     </div>

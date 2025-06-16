@@ -112,9 +112,13 @@ async function runSafelistBuild() {
     const classNames = extractClassNamesFromBlockJSON(blockJSONs);
 
     const outputPath = path.resolve('./src/app/safelist.css');
-    const inlineBlock = `@source inline("${classNames.join(' ')}");\n`;
 
-    fs.writeFileSync(outputPath, inlineBlock);
+    const lines = classNames
+        .sort()
+        .map(cls => `@source inline("${cls}");`)
+        .join('\n') + '\n';
+
+    fs.writeFileSync(outputPath, lines);
     console.log(`✅ Wrote ${classNames.length} classes to ${outputPath}`);
 }
 

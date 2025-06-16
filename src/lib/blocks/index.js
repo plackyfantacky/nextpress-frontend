@@ -1,4 +1,4 @@
-import {extractTextFromTag, normalizeClassNames, normalizeBlockName, extractAttributeValue } from '../utils';
+import { normaliseClassNames, normaliseBlockName, extractAttributeValue, preprocessBlock } from '../utils';
 
 const blockRenderers = {
     'core/cover': () => import('./blockCover'),
@@ -10,6 +10,13 @@ const blockRenderers = {
     'core/heading': () => import('./blockHeading'),
     'core/paragraph': () => import('./blockParagraph'),
     'core/quote': () => import('./blockQuote'),
+    'core/code': () => import('./blockCode'),
+    'core/preformatted': () => import('./blockPreformatted'),
+    'core/list': () => import('./blockList'),
+    'core/list-item': () => import('./blockListItem'),
+    'core/table': () => import('./blockTable'),
+    'core/pullquote': () => import('./blockPullquote'),
+    'core/details': () => import('./blockDetails'),
 
     // Add other block renderers here
 };
@@ -32,14 +39,19 @@ export function parseBlocks(blockData) {
 }
 
 export async function renderBlock(block, keyPrefix = 'block', postContext = {}) {
-    const { attrs = {}, blockName, innerBlocks = [], innerHTML } = block;
+    const { blockName, innerBlocks = [], innerHTML } = block;
     if (!blockName && (!innerHTML || innerHTML.trim() === '')) { return null; }
 
-    const normalizedClassNames = normalizeClassNames(extractAttributeValue({html: innerHTML, attribute: 'class'}) || '');
-    const blockClassName = normalizeBlockName(blockName);
+    block = preprocessBlock(block);
+    
+    const wrapperTag = block.wrapperTag || '';
+    const normalisedClassNames = normaliseClassNames(extractAttributeValue({html: innerHTML, tag: wrapperTag, attribute: 'class'}) || '');
+    const blockClassName = normaliseBlockName(blockName);
     const idAttribute = extractAttributeValue({html: innerHTML, attribute: 'id'}) || '';
+    
+    
     //TO DO: investigate if its possible for WordPress to allow attributes to be passed in the block data.
-    // If so, we'll need to handle that here.
+    // If so, we'll need to handle that here somewhere.
 
     const renderer = blockRenderers[blockName];
     if (!renderer) {
@@ -54,7 +66,7 @@ export async function renderBlock(block, keyPrefix = 'block', postContext = {}) 
         <Component
             key={keyPrefix}
             keyPrefix={`${keyPrefix}-${Math.random().toString(36).substring(2, 8)}`}
-            block={{ ...block, idAttribute, blockClassName, normalizedClassNames }}
+            block={{ ...block, idAttribute, blockClassName, normalisedClassNames }}
             postContext={postContext}
             children={children}
         />

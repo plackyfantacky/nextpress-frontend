@@ -1,6 +1,8 @@
 import React from 'react';
 import hljs from 'highlight.js';
 import parse, { domToReact } from 'html-react-parser';
+import { extractTag, normaliseClassNames } from "./utils";
+import { A, Image } from '@/components/Elements';
 
 /**
  * Renders highlighted code using highlight.js.
@@ -52,98 +54,61 @@ export function decodeHTMLEntities(encoded = '') {
         .replace(/&#39;/g, "'");
 }
 
+/** * Renders inline HTML content as React elements.
+ * @param {string} html - The HTML string to render.
+ * @returns {ReactNode} The rendered React elements.
+ */
+// TODO: Not critical, but using the 'Edit HTML' option in the WP Block Editor, it is possible customise the HTML outside of what this parser expects.
+// Unhandled cases: custom tags, attributes added to existing tags.
 export function renderInlineHTML(html = '') {
     const replace = (node) => {
         if (node.type !== 'tag') return;
 
         const { name, children = [], attribs = {} } = node;
 
+        const replacedNode = domToReact(children, { replace });
+
         switch (name) {
-            case 'strong':
+            case 'b':
+            case 'strong': {
+                return <strong>{replacedNode}</strong>;
+            }
+
+            case 'i':
             case 'em':
-            case 'b': //extra
-            case 'i': //extra
-            case 'sub':
-            case 'sup':
-            case 'del':
-            case 'span': //extra
-                return React.createElement(name, {}, domToReact(children, { replace }));
+            case 'italic': {
+                return <em>{replacedNode}</em>;
+            }
 
             case 'a': {
-                return (
-                    <a href={attribs.href || '#'} target="_blank" rel="noopener noreferrer">
-                        {domToReact(children, { replace })}
-                    </a>
-                );
+                return (<A href={attribs.href} target="_blank" rel="noopener noreferrer">{replacedNode}</A>);
             }
 
             case 'code':
-                return <code className="inline-code">{domToReact(children, { replace })}</code>;
+                return <code className="inline-code">{replacedNode}</code>;
 
             case 'kbd':
-                return <kbd className="kbd">{domToReact(children, { replace })}</kbd>;
+                return <kbd className="kbd">{replacedNode}</kbd>;
 
             case 'mark': {
 
-                const rawStyle = attribs?.style || '';
-                const rawClass = attribs?.class || '';
+                const style = parseStyleString(attribs?.style || '');
+                const classNames = normaliseClassNames(attribs?.class || '');
 
-                const parsedStyle = parseStyleString(rawStyle)
-
-                const classNames = rawClass
-                    .split(/\s+/)
-                    .map(cls => {
-                        const match = cls.match(/^has-([a-z0-9-]+)-color$/i);
-                        return match ? `text-${match[1]}` : null;
-                    })
-                    .filter(Boolean)
-                    .join(' ');
-                    
-                const onlyContainsText = children?.every(
-                    child => child.type === 'text' || (child.type === 'tag' && child.name === 'br')
-                );
-
-                if (!onlyContainsText) {
-                    console.warn('<mark> contains unexpected non-text nodes.');
-                }
-
-                return <mark className={classNames} style={parsedStyle}>
-                    {domToReact(children)}
-                </mark>;
+                // TODO: why is this one different (not using replacedNode)?
+                return <mark className={classNames} style={style}>{domToReact(children)}</mark>;
             }
 
             case 'img': {
-                const { src, alt = '', title = '', style: rawStyle = ''} = attribs;
-                const parsedStyle = parseStyleString(rawStyle);
+                const { src, alt = '', title = '', style: rawStyle = '' } = attribs;
+                const parsedStyle = parseStyleString(rawStyle) || {
+                    display: 'inline',
+                    maxHeight: '1em',
+                    verticalAlign: 'middle'
+                };
 
-                // const objectFit = this?.options?.context?.imageAttrs?.scale;
-                // if(objectFit === 'cover' || objectFit === 'contain') {
-                //     parsedStyle.objectFit = objectFit;
-                // }
-
-                const img = (
-                    <img
-                        src={src}
-                        alt={alt}
-                        {...title ? { title} : {}}
-                        className="image-itself"
-                        style={ parsedStyle || {
-                            display: 'inline',
-                            maxHeight: '1em',
-                            verticalAlign: 'middle'
-                        }}
-                    />
-                );
-
-                if(this?.options?.context?.lightbox && src) {
-                    return (
-                        <a href={src} data-lightbox="gallery" data-src={src} className="lightbox">
-                            {img}
-                        </a>
-                    );
-                }
-
-                return img;
+                // Use this only for inline-images, not for figures or lightboxes.
+                return <Image src={src} alt={alt} {...title ? { title } : {}} className="image-itself" style={parsedStyle} />;
             }
 
             case 'sup':
@@ -151,22 +116,112 @@ export function renderInlineHTML(html = '') {
                 if (children.length === 1 && children[0].name === 'a') {
                     return (
                         <sup>
-                            <a
-                                href={children[0].attribs?.href || '#'}
-                                id={children[0].attribs?.id || ''}
-                                className="footnote"
-                            >
+                            <A href={children[0].attribs?.href} id={children[0].attribs?.id} className="footnote">
                                 {domToReact(children[0].children)}
-                            </a>
+                            </A>
                         </sup>
                     );
                 }
-                return <sup>{domToReact(children, { replace })}</sup>;
+                return <sup>{replacedNode}</sup>;
+
+            case 'sub':
+                return <sub>{replacedNode}</sub>;
+
+            case 'del':
+            case 'div':
+            case 'span': //extra
+                return React.createElement(name, {}, domToReact(children, { replace }));
 
             default:
                 return undefined;
         }
     };
     return parse(html, { replace });
+}
 
+/**
+ * Parses a table cell tag and extracts its content (not classnames or styles for now).
+ * @param {string} tag - The HTML string of the table cell.
+ * @param {string} tagName - The name of the tag to parse (default is 'td').
+ * @returns {object} An object containing the content (classnames and style may be added later).
+ */
+export function parseCellTag(tag = '', tagName = 'td') {
+    const contentMatch = tag.match(new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)<\\/${tagName}>`, 'i'));
+
+    return { content: contentMatch[1]?.trim() || '' };
+}
+
+/**
+ * Renders a table cell from a given tag.
+ * @param {string} tag - The HTML string of the table cell.
+ * @param {number} i - The index of the cell in the row.
+ * @param {string} tagName - The name of the tag to render (default is 'td').
+ * @returns {ReactNode} The rendered table cell as a React element.
+ */
+export function renderTableCell(tag, i, tagName = 'td') {
+    const { content, className, style } = parseCellTag(tag, tagName);
+
+    return React.createElement(
+        tagName,
+        {
+            key: `cell-${i}`,
+        },
+        renderInlineHTML(content)
+    );
+}
+
+/**
+ * Renders a table row from a given HTML string.
+ * @param {string} rowHTML - The HTML string of the table row.
+ * @param {number} i - The index of the row in the table.
+ * @param {string} cellTag - The name of the tag for table cells (default is 'td').
+ * @returns {ReactNode|null} The rendered table row as a React element, or null if no cells are found.
+ */
+export function renderTableRow(rowHTML, i, cellTag = 'td') {
+    const cellTags = extractTag(rowHTML, cellTag, false, false);
+    if (!cellTags || cellTags.length === 0) return null;
+
+    return (
+        <tr key={`row-${i}`}>
+            {cellTags.map((tag, j) => renderTableCell(tag, j, cellTag))}
+        </tr>
+    );
+}
+
+/**
+ * Renders a table section (thead, tbody, tfoot) from a given HTML string.
+ * @param {string} sectionTag - The tag of the section to render (thead, tbody, tfoot).
+ * @param {string} innerHTML - The HTML string containing the section.
+ * @returns {ReactNode|null} The rendered section as a React element, or null if no rows are found.
+ */
+export function renderTableSection(sectionTag = 'tbody', innerHTML = '') {
+    if (!['thead', 'tbody', 'tfoot'].includes(sectionTag)) return null;
+
+    const sectionHTML = extractTag(innerHTML, sectionTag, false, true);
+    if (!sectionHTML) return null;
+
+    const rowTags = extractTag(sectionHTML, 'tr', false, false);
+    if (!rowTags || rowTags.length === 0) return null;
+
+    const isBody = sectionTag === 'tbody';
+    const cellTag = sectionTag === 'thead' ? 'th' : 'td';
+
+    return React.createElement(sectionTag, {}, rowTags.map((rowHTML, rowIndex) => {
+        const cellTags = extractTag(rowHTML, cellTag, false, false) || [];
+
+        return (
+            <tr
+                key={`${sectionTag}-row-${rowIndex}`}
+                id={isBody ? `row-${rowIndex}` : undefined}
+                className={isBody ? (rowIndex % 2 === 0 ? 'even' : 'odd') : undefined}
+                data-row-index={isBody ? rowIndex : undefined}
+            >
+                {cellTags.map((cellHTML, i) => {
+                    const contentMatch = cellHTML.match(new RegExp(`<${cellTag}[^>]*>([\\s\\S]*?)<\\/${cellTag}>`, 'i'));
+                    const content = contentMatch?.[1] || '';
+                    return React.createElement(cellTag, { key: `${cellTag}-${i}` }, parse(content));
+                })}
+            </tr>
+        );
+    }));
 }

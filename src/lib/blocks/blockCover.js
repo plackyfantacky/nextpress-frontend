@@ -11,10 +11,11 @@ export default function BlockCover({ block, keyPrefix, postContext, children }) 
         url = '', // this is the image URL, if not using featured image
         useFeaturedImage = false,
         customOverlayColor = '', // this is not output in innerHTML, so process it directly
-        dimRatio = 50, // append to bg- classes
+        dimRatio = 100, // append to bg- classes
         focalPoint = { x: 0.5, y: 0.5 },
         contentPosition = 'center center', // this is not output in innerHTML, so process it directly. order is vertical horizontal.
         tagName: Tag = 'section', // this is not output in innerHTML, so process it directly
+        layout = {}
     } = attrs;
 
     let normalisedImageClasses = normaliseClassNames(extractAttributeValue({ html: innerHTML, attribute: 'class', tag: 'div', index: 1 }) || '');
@@ -27,13 +28,8 @@ export default function BlockCover({ block, keyPrefix, postContext, children }) 
     //if focalPoint is something other than { x: 0.5, y: 0.5 }, then we need to set the background position as a tailwind class
     const focalPointClass = focalPoint && (focalPoint.x !== 0.5 || focalPoint.y !== 0.5) ? `bg-position-[${focalPoint.x * 100}%_${focalPoint.y * 100}%]` : '';
 
-    // TODO: Tailwind 4.1 prefers bg-<color>/<opacity_as_percentage> but custom colors can be used yet.
-    // if dimRatio is not 0, then we need to set the opactity as a tailwind class. WP uses between 0 and 1 (e.g 0.5) but Tailwind uses 0-100 (e.g. 50).
-    // also bg-opacity- doesn't exist anymore. Convert dimRatio decimal to percentage and output `opacity-<dimRatio>`
-    // if dimRatio is missing, return empty string
-    
     const dimRatioValue = dimRatio !== undefined && dimRatio !== 100 ? Math.round(dimRatio) : 100; // ensure dimRatio is a number between 0 and 100
-    const dimRatioClass = dimRatioValue !== 100 ? `opacity-${dimRatioValue}` : ''; // Tailwind 4.1 prefers bg-<color>/<opacity_as_percentage> but custom colors can be used yet.
+    const dimRatioClass = dimRatioValue < 100 ? `opacity-${dimRatioValue}` : '';
 
     const blockContainerClasses = joinClassNames(
         blockClassName,

@@ -9,6 +9,7 @@
 @source inline("items-{start,end,center}");
 @source inline("w-[100cqw]");
 @source inline("text-{2..9}xl");
+@source inline("col-(--colspan-{1..12})");
 
 @theme static {
     --color-primary: #f99d2a;
@@ -27,6 +28,19 @@
     --color-black-mana: #848484;
     --color-vulcanised: #434343;
     --color-inkwell-inception: #1E1E1E;
+
+    --colspan-1: span 1;
+    --colspan-2: span 2;
+    --colspan-3: span 3;
+    --colspan-4: span 4;
+    --colspan-5: span 5;
+    --colspan-6: span 6;
+    --colspan-7: span 7;
+    --colspan-8: span 8;
+    --colspan-9: span 9;
+    --colspan-10: span 10;
+    --colspan-11: span 11;
+    --colspan-12: span 12;
 
     --text-h1: 3.815rem;
     --text-h2: 3.052rem;

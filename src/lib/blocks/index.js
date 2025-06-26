@@ -39,7 +39,7 @@ export function parseBlocks(blockData) {
     }
 }
 
-export async function renderBlock(block, keyPrefix = 'block', postContext = {}) {
+export async function renderBlock(block, keyPrefix = 'block', postContext = {}, inheritedProps = {}) {
     const { blockName, innerBlocks = [], innerHTML } = block;
     if (!blockName && (!innerHTML || innerHTML.trim() === '')) { return null; }
 
@@ -70,15 +70,16 @@ export async function renderBlock(block, keyPrefix = 'block', postContext = {}) 
             block={{ ...block, idAttribute, blockClassName, normalisedClassNames }}
             postContext={postContext}
             children={children}
+            inheritedProps={inheritedProps}
         />
     );
 
 }
 
-export async function renderBlocksRecursively(blocks, keyPrefix, postContext) {
+export async function renderBlocksRecursively(blocks, keyPrefix, postContext, inheritedProps = {}) {
     const rendered = await Promise.all(
         blocks.map((block, i) =>
-            renderBlock(block, `${keyPrefix}-${i}`, postContext)
+            renderBlock(block, `${keyPrefix}-${i}`, postContext, inheritedProps)
         )
     );
     return rendered.filter(Boolean);

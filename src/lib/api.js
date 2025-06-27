@@ -1,16 +1,23 @@
 const API_URL = process.env.WP_URL;
+const IS_DEV = process.env.NODE_ENV === 'development';
 
 export async function fetchAPI(query, { variables } = {}) {
-    const res = await fetch(API_URL, {
+    
+
+    const fetchOptions = {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
         },
         body: JSON.stringify({ query, variables }),
-        next: { revalidate: 60 }
-    });
+        ...(IS_DEV
+            ? { cache: 'no-store' }
+            : { next: { revalidate: 86400 } }
+        )
+    };
 
+    const res = await fetch(API_URL, fetchOptions);
     const json = await res.json();
 
     if (json.errors) {
@@ -65,7 +72,7 @@ export async function getPageBySlug(slug) {
 }
 
 export async function getHomePageBlocks() {
-    const data  = await fetchAPI(`
+    const data = await fetchAPI(`
         query GetHomePage {
             page(id: "home", idType: URI) {
                 blocksJSON

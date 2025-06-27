@@ -1,6 +1,6 @@
 import React from 'react';
-import { joinClassNames, extractTag, extractAttributeValue, parseWidthFromStyle } from "@/lib/utils";
-import { Figure } from '@/components/Elements';
+import { joinClassNames, extractTag, extractAttributeValue } from "@/lib/utils";
+import { Figure } from '@/components/elements';
 
 export default function BlockImage({ block, keyPrefix }) {
     const { attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = ''} = block;
@@ -10,11 +10,15 @@ export default function BlockImage({ block, keyPrefix }) {
     const figureBody = extractTag(innerHTML, 'figure', true) || '';
 
     // The internal img element
+    let imgID = idAttribute || '';
     const imgSrc = extractAttributeValue({ html: figureBody, attribute: 'src' });
     const imgAlt = extractAttributeValue({ html: figureBody, attribute: 'alt' });
-    const imgWidth = attrs.width || parseWidthFromStyle(figureBody);
     const imgHeight = attrs.height || '';
-    let imgID = idAttribute || '';
+    
+    const imgWidth = attrs.width || (() => { 
+        const match = figureBody.match(/width\s*:\s*([0-9.]+[a-z%]*)/i);
+        return match ? match[1] : null;
+    })();
 
     let linkHref;
     if(attrs.linkDestination && attrs.linkDestination !== 'none') {

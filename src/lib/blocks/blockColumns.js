@@ -1,5 +1,5 @@
 import React from "react";
-import { joinClassNames, withConditionalInnerWrapper } from "@/lib/utils";
+import { joinClassNames} from "@/lib/utils";
 
 export default function BlockColumns({ block, keyPrefix, children, inheritedProps }) {
     const { attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = ''} = block;
@@ -29,7 +29,7 @@ export default function BlockColumns({ block, keyPrefix, children, inheritedProp
 
     return (
         <Tag key={keyPrefix} className={blockClassNames} {...( idAttribute ? { id: idAttribute } : {} )}>
-            {withConditionalInnerWrapper(modifiedChildren, innerHTML, blockClassName, columnWrapperClass)}
+            {modifiedChildren}
         </Tag>
     );
 }

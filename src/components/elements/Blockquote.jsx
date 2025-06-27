@@ -1,7 +1,7 @@
 import React from 'react';
 import { extractTag } from '@/lib/utils';
 import { renderInlineHTML } from '@/lib/parser';
-import { Cite, Figure } from '@/components/Elements';
+import { Cite, Figure } from '@/components/elements';
 
 const Blockquote = ({ block, keyPrefix, wrapInFigure = false, children }) => {
     const { idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = '' } = block;

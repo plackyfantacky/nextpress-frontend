@@ -4,6 +4,8 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { exec } from 'child_process';
+import { filterWPClassNames } from '../src/lib/utils.js';
+import { processAttributesToClassNames } from '../src/lib/attributes.js';
 
 dotenv.config(); // Load .env for WP_URL
 
@@ -61,6 +63,12 @@ function extractClassNamesFromBlockJSON(blocksJSON) {
                 attrs.className.split(/\s+/).forEach(cls => classNames.add(cls));
             }
 
+            // Process attributes to class names
+            const processedClassNames = processAttributesToClassNames(attrs);
+            if (processedClassNames) {
+                processedClassNames.split(/\s+/).forEach(cls => classNames.add(cls));
+            }
+
             // Extract class="" values from innerHTML
             const htmlMatches = innerHTML.match(/class="([^"]+)"/g) || [];
             for (const match of htmlMatches) {
@@ -102,24 +110,27 @@ async function main() {
     const blockJSONs = await fetchAllPageBlockJSON();
 
     console.log(`🔍 Processing ${blockJSONs.length} pages...`);
-    const classNames = extractClassNamesFromBlockJSON(blockJSONs);
-
-    const colorTokens = extractTailwindColorTokens('./src/app/global.css');
-    for (const token of colorTokens) {
-        classNames.add(`bg-${token}`);
-        classNames.add(`text-${token}`);
-        classNames.add(`border-${token}`);
-    }
+    let classNames = extractClassNamesFromBlockJSON(blockJSONs);
 
     const outputPath = path.resolve('./src/app/safelist.css');
 
-    const lines = classNames
+    console.log(`🔍 Found ${classNames.length} unique class names.`);
+    
+    let lines = classNames
         .sort()
-        .map(cls => `@source inline("${cls}");`)
+        // Filter out non-WordPress class names
+        .filter(cls => filterWPClassNames(cls));
+    
+    //filtered out WP class names
+    console.log(`🔍 Filtered down to ${lines.length} non-WordPress class names.`);
+
+    let output = lines.map(cls => `@source inline("${cls}");`)
         .join('\n') + '\n';
 
-    fs.writeFileSync(outputPath, lines);
-    console.log(`✅ Wrote ${classNames.length} classes to ${outputPath}`);
+    fs.writeFileSync(outputPath, output);
+
+    //wrore n umber of classes to console
+    console.log(`✅ ${lines.length} lines written to Safelist: ${outputPath}`);
 }
 
 const isWatchMode = process.argv.includes('--watch');

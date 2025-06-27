@@ -1,4 +1,6 @@
-import { normaliseClassNames, normaliseBlockName, extractAttributeValue, preprocessBlock } from '../utils';
+import { extractAttributeValue, preprocessBlock } from '@/lib/utils';
+import { normaliseClassNames } from '@/lib/styler';
+import { processAttributesToClassNames } from '@/lib/attributes';
 
 const blockRenderers = {
     'core/cover': () => import('./blockCover'),
@@ -40,16 +42,20 @@ export function parseBlocks(blockData) {
 }
 
 export async function renderBlock(block, keyPrefix = 'block', postContext = {}, inheritedProps = {}) {
-    const { blockName, innerBlocks = [], innerHTML } = block;
+    const { blockName, innerBlocks = [], innerHTML} = block;
     if (!blockName && (!innerHTML || innerHTML.trim() === '')) { return null; }
 
     block = preprocessBlock(block);
     
     const wrapperTag = block.wrapperTag || '';
-    const normalisedClassNames = normaliseClassNames(extractAttributeValue({html: innerHTML, tag: wrapperTag, attribute: 'class'}) || '');
-    const blockClassName = normaliseBlockName(blockName);
+    let normalisedClassNames = normaliseClassNames(extractAttributeValue({html: innerHTML, tag: wrapperTag, attribute: 'class'}) || '');
+    const processedAttributeClassNames = processAttributesToClassNames(block.attrs || {});
+    const blockClassName = blockName.replace(/^core\//, '') + '-block';
     const idAttribute = extractAttributeValue({html: innerHTML, attribute: 'id'}) || '';
     
+    //console.log('processedAttributeClassNames', processedAttributeClassNames);
+
+    normalisedClassNames = normalisedClassNames ? `${normalisedClassNames} ${processedAttributeClassNames}` : processedAttributeClassNames;
     
     //TO DO: investigate if its possible for WordPress to allow attributes to be passed in the block data.
     // If so, we'll need to handle that here somewhere.
@@ -59,6 +65,12 @@ export async function renderBlock(block, keyPrefix = 'block', postContext = {}, 
         console.warn(`Unhandled block type: ${blockName}`);
         return null;
     }
+
+    if(blockName === 'core/group') {
+        //console.log('block', block?.attrs);
+    }
+
+    //console.log('normalisedClassNames 1', normalisedClassNames);
 
     const children = await renderBlocksRecursively(innerBlocks, keyPrefix, postContext);
     const { default: Component } = await renderer();

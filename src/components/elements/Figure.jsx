@@ -1,7 +1,6 @@
 import React from 'react';
 import Lightbox from "@/components/Lightbox";
-import Image from "@/components/Elements/Image";
-import A from "@/components/Elements/A";
+import { A, Image } from "@/components/elements";
 
 const Figure = ({children, ...props}) => {
     const {

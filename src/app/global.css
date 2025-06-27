@@ -9,7 +9,7 @@
 @source inline("items-{start,end,center}");
 @source inline("w-[100cqw]");
 @source inline("text-{2..9}xl");
-@source inline("col-(--colspan-{1..12})");
+@source inline("col-[span_{1..12}]");
 
 @theme static {
     --color-primary: #f99d2a;
@@ -93,8 +93,6 @@ h6 {
 p {
     @apply text-base font-light;
 }
-
-
 
 
 @layer utilities {

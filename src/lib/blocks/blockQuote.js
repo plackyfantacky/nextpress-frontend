@@ -2,7 +2,7 @@ import React from 'react';
 
 import { joinClassNames, extractTag } from "@/lib/utils";
 import { renderInlineHTML } from "@/lib/parser";
-import { Blockquote } from "@/components/Elements";
+import { Blockquote } from "@/components/elements";
 
 export default function BlockQuote({ block, keyPrefix, children }) {
     const { idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = '' } = block;

@@ -1,8 +1,8 @@
 import React from 'react';
-import Image from '@/components/Elements/Image';
+import Image from '@/components/elements/Image';
 import { renderBlocksRecursively } from '@/lib/blocks';
 import { joinClassNames } from '@/lib/utils';
-import { Figure } from "@/components/Elements";
+import { Figure } from "@/components/elements";
 
 export default function BlockMediaText({ block, keyPrefix, postContext }) {
     const { attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = '', innerBlocks = [] } = block;

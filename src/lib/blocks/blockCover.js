@@ -1,5 +1,6 @@
 import React from "react";
-import { normaliseClassNames, contentPositionToTailwind, extractAttributeValue, joinClassNames, withConditionalInnerWrapper } from "@/lib/utils";
+import { extractAttributeValue, joinClassNames } from "@/lib/utils";
+import { normaliseClassNames } from "@/lib/styler";
 
 export default function BlockCover({ block, keyPrefix, postContext, children }) {
     const { attrs = {}, idAttribute = '', blockClassName = '', innerHTML = ''} = block;
@@ -15,12 +16,15 @@ export default function BlockCover({ block, keyPrefix, postContext, children }) 
         focalPoint = { x: 0.5, y: 0.5 },
         contentPosition = 'center center', // this is not output in innerHTML, so process it directly. order is vertical horizontal.
         tagName: Tag = 'section', // this is not output in innerHTML, so process it directly
-        layout = {}
     } = attrs;
 
     let normalisedImageClasses = normaliseClassNames(extractAttributeValue({ html: innerHTML, attribute: 'class', tag: 'div', index: 1 }) || '');
     let normalisedOverlayClasses = normaliseClassNames(extractAttributeValue({ html: innerHTML, attribute: 'class', tag: 'span' }) || '');
-    let normalisedPositioningClasses = contentPositionToTailwind(contentPosition);
+
+    const [vertical, horizontal] = contentPosition.split(' ');
+    const direction = { left: 'start', center: 'center', right: 'end' };
+
+    let normalisedPositioningClasses = `flex items-${direction[horizontal] || 'center'} justify-${direction[vertical] || 'center'}`;
 
     const imageURL = (useFeaturedImage ? postContext?.postImage : url) || '';
     const minHeightValue = `${minHeight}${minHeightUnit}`; // there will always be a minHeight and minHeightUnit (default params)
@@ -38,7 +42,7 @@ export default function BlockCover({ block, keyPrefix, postContext, children }) 
     );
 
     const blockContainerStyle = {
-        minHeight: minHeightValue,
+        //minHeight: minHeightValue,
         //style, // TODO: handle style object (it should only be drop shadows but their format is weird)
     };
 
@@ -71,7 +75,7 @@ export default function BlockCover({ block, keyPrefix, postContext, children }) 
         <Tag key={keyPrefix} className={blockContainerClasses} {...(blockContainerStyle ? { style: blockContainerStyle } : {})} {...( idAttribute ? { id: idAttribute } : {} )}>
             <div role="img" aria-label={alt || ''} className={blockImageClasses} {...(blockImageStyle ? { style: blockImageStyle } : {})} />
             <span aria-hidden="true" className={blockOverlayClasses} {...(blockOverlayStyle ? { style: blockOverlayStyle } : {})} />
-            { withConditionalInnerWrapper(children, innerHTML, blockClassName, blockContentClasses) }
+            <div className={blockContentClasses}>{children}</div>
         </Tag>
     );
 }

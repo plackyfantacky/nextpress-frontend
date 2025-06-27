@@ -16,7 +16,7 @@
         "highlight.js": "^11.11.1",
         "html-react-parser": "^5.2.5",
         "micromodal": "^0.6.1",
-        "next": "15.3.3",
+        "next": "^15.3.4",
         "react": "^19.0.0",
         "react-dom": "^19.0.0"
     },

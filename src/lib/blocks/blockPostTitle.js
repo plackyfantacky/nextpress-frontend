@@ -1,6 +1,7 @@
 import React from "react";
-import { joinClassNames, normaliseClassNamesFromAttributes } from "@/lib/utils";
-import { A } from "@/components/Elements";
+import { joinClassNames } from "@/lib/utils";
+import { processAttributesToClassNames } from "@/lib/attributes";
+import { A } from "@/components/elements";
 
 export default function BlockPostTitle({ block, keyPrefix, postContext }) {
     
@@ -18,7 +19,7 @@ export default function BlockPostTitle({ block, keyPrefix, postContext }) {
     const Tag = `h${level >= 1 && level <= 6 ? level : 2}`;
     const title = postContext?.postTitle || 'Untitled';
 
-    const normalisedClassNames = normaliseClassNamesFromAttributes(attrs);
+    const normalisedClassNames = processAttributesToClassNames(attrs, true);
 
     const text = isLink ? (
         <>

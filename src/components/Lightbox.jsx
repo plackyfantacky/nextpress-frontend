@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { A, Image } from "@/components/Elements/index";
+import { A, Image } from "@/components/elements/index";
 import MicroModal from "micromodal";
 
 let initialized = false;

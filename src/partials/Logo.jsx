@@ -1,7 +1,7 @@
 import React from 'react'
 
-const Logo = (props) => {
-    const { id = "site_logo", className = 'inline-block w-full h-full', aLink = "#", aClass = "" } = props;
+const Logo = (props) => {6
+    const { id = "site_logo", className = 'inline-block w-full h-full', aLink = "#", aClass = "block h-12" } = props;
     
     return (
         <a href={aLink} className={ aClass } >

@@ -1,7 +1,7 @@
 import React from 'react';
 
-import LogoMono from '@/components/LogoMono';
-import SocialIcons from '@/components/SocialIcons';
+import LogoMono from '@/partials/LogoMono';
+import SocialIcons from '@/partials/SocialIcons';
 
 const Footer = () => {
 

@@ -2,7 +2,7 @@ import React from "react";
 import { joinClassNames } from "@/lib/utils";
 
 export default function BlockColumn({ block, keyPrefix, children, inheritedProps = {} }) {
-    const { attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = ''} = block;
+    const { attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = '' } = block;
     const { columnClass } = inheritedProps;
     const { tagName: Tag = 'div' } = attrs;
 

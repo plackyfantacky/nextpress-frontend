@@ -50,8 +50,12 @@ const inlineTransformers = [
     tranformImage,
     transformSuperscript,
     transformSubscript,
+    transformSpan,
     transformDiv,
-    transformSpan
+    transformParagraph,
+    transformBidirectionalIsolate,
+    transformBidirectionalOverride,
+    transformCite
 ];
 
 /**
@@ -128,7 +132,13 @@ function transformTextNode(node, index, keyPrefix) {
     if (node.type === 'text') return node.data;
 }
 
-
+/**
+ * Transforms a linebreak node into a React element.
+ * @param {object} node - The linebreak node to transform.
+ * @param {number} index - The index of the node in the parent.
+ * @param {string} keyPrefix - The prefix for the key attribute.
+ * @returns {ReactNode|null} A React element representing the linebreak or null if not a linebreak node.
+ */
 function transformLinebreak(node, index, keyPrefix) {
     if (node.type === 'tag' && node.name === 'br') {
         return <br key={`${keyPrefix}-${index}`} />;
@@ -170,7 +180,7 @@ function transformItalic(node, index, keyPrefix) {
 }
 
 function transformStrikethrough(node, index, keyPrefix) {
-    if (node.type === 'tag' && (node.name === 's' || node.name === 'strike' || node.name === 'del')) {
+    if (node.type === 'tag' && (node.name === 's' || node.name === 'strike')) {
         return (
             <del key={`${keyPrefix}-${index}`}>
                 { renderInlineChildren(node.children, keyPrefix, index) }
@@ -330,11 +340,34 @@ function transformSubscript(node, index, keyPrefix) {
     if (node.type === 'tag' && node.name === 'sub') {
         return (
             <sub key={`${keyPrefix}-${index}`}>
-                { renderInlineChildren(node.childre, keyPrefix, index) }
+                { renderInlineChildren(node.children, keyPrefix, index) }
             </sub>
         );
     }
 }
+
+/**
+ * Transforms a span node into a React element.
+ * @param {object} node - The span node to transform.
+ * @param {number} index - The index of the node in the parent.
+ * @param {string} keyPrefix - The prefix for the key attribute.
+ * @returns {ReactNode|null} A React element representing the span or null if not a span node.
+ */
+function transformSpan(node, index, keyPrefix) {
+    if (node.type === 'tag' && node.name === 'span') {
+        const { attribs = {}, children = [] } = node;
+        const classNames = normaliseClassNames(attribs?.class || '');
+        const style = parseStyleString(attribs?.style || '');
+        
+        return (
+            <span key={`${keyPrefix}-${index}`} className={classNames} style={style}>
+                { renderInlineChildren(children, keyPrefix, index) }
+            </span>
+        );
+    }
+}
+
+// rarely used, but here to prevent issues.
 
 /**
  * Transforms a div node into a React element.
@@ -358,22 +391,103 @@ function transformDiv(node, index, keyPrefix) {
 }
 
 /**
- * Transforms a span node into a React element.
- * @param {object} node - The span node to transform.
+ * * Transforms a paragraph node into a React element.
+ * @param {object} node - The paragraph node to transform.
  * @param {number} index - The index of the node in the parent.
  * @param {string} keyPrefix - The prefix for the key attribute.
- * @returns {ReactNode|null} A React element representing the span or null if not a span node.
+ * @returns {ReactNode|null} A React element representing the paragraph or null if not a paragraph node.
  */
-function transformSpan(node, index, keyPrefix) {
-    if (node.type === 'tag' && node.name === 'span') {
+function transformParagraph(node, index, keyPrefix) {
+    if (node.type === 'tag' && node.name === 'p') {
         const { attribs = {}, children = [] } = node;
         const classNames = normaliseClassNames(attribs?.class || '');
         const style = parseStyleString(attribs?.style || '');
         
         return (
-            <span key={`${keyPrefix}-${index}`} className={classNames} style={style}>
+            <p key={`${keyPrefix}-${index}`} className={classNames} style={style}>
                 { renderInlineChildren(children, keyPrefix, index) }
-            </span>
+            </p>
+        );
+    }
+}
+
+/**
+ * Transforms a bidirectional isolate node into a React element.
+ * @param {object} node - The bidirectional isolate node to transform.
+ * @param {number} index - The index of the node in the parent.
+ * @param {string} keyPrefix - The prefix for the key attribute.
+ * @returns {ReactNode|null} A React element representing the bidirectional isolate or null if not a bidirectional isolate node.
+ */
+function transformBidirectionalIsolate(node, index, keyPrefix) {
+    if (node.type === 'tag' && node.name === 'bdi') {
+        return (
+            <bdi key={`${keyPrefix}-${index}`}>
+                { renderInlineChildren(node.children, keyPrefix, index) }
+            </bdi>
+        );
+    }
+}
+
+/**
+ * Transforms a bidirectional override node into a React element.
+ * @param {object} node - The bidirectional override node to transform.
+ * @param {number} index - The index of the node in the parent.
+ * @param {string} keyPrefix - The prefix for the key attribute.
+ * @returns {ReactNode|null} A React element representing the bidirectional override or null if not a bidirectional override node.
+ */
+function transformBidirectionalOverride(node, index, keyPrefix) {
+    if (node.type === 'tag' && node.name === 'bdo') {
+        const { attribs = {}, children = [] } = node;
+        const { dir = 'ltr' } = attribs;
+
+        return (
+            <bdo key={`${keyPrefix}-${index}`} dir={dir}>
+                { renderInlineChildren(children, keyPrefix, index) }
+            </bdo>
+        );
+    }
+}
+
+/**
+ * Transforms a cite node into a React element.
+ * Handles the <cite> tag, which is used to reference the title of a work.
+ * @param {object} node - The cite node to transform.
+ * @param {number} index - The index of the node in the parent.
+ * @param {string} keyPrefix - The prefix for the key attribute.
+ * @returns {ReactNode|null} A React element representing the cite or null if not a cite node.
+ */
+function transformCite(node, index, keyPrefix) {
+    if (node.type === 'tag' && node.name === 'cite') {
+        const { attribs = {}, children = [] } = node;
+        const classNames = normaliseClassNames(attribs?.class || '');
+        const style = parseStyleString(attribs?.style || '');
+
+        return (
+            <cite key={`${keyPrefix}-${index}`} className={classNames} style={style}>
+                { renderInlineChildren(children, keyPrefix, index) }
+            </cite>
+        );
+    }
+}
+
+/**
+ * Transforms a del tag node into a React element.
+ * Handles the <del> tag, which is used to indicate deleted text.
+ * @param {object} node - The del tag node to transform.
+ * @param {number} index - The index of the node in the parent.
+ * @param {string} keyPrefix - The prefix for the key attribute.
+ * @returns {ReactNode|null} A React element representing the del tag or null if not a del tag node.
+ */
+function transformDelTag(node, index, keyPrefix) {
+    if (node.type === 'tag' && node.name === 'del') {
+        const { attribs = {}, children = [] } = node;
+        const classNames = normaliseClassNames(attribs?.class || '');
+        const style = parseStyleString(attribs?.style || '');
+
+        return (
+            <del key={`${keyPrefix}-${index}`} className={classNames} style={style}>
+                { renderInlineChildren(children, keyPrefix, index) }
+            </del>
         );
     }
 }

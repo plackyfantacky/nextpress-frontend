@@ -5,7 +5,7 @@ import { joinClassNames } from '@/lib/utils';
 import { Figure } from "@/components/elements";
 
 export default function BlockMediaText({ block, keyPrefix, postContext }) {
-    const { attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = '', innerBlocks = [] } = block;
+    const { attrs = {}, idAttribute = '', normalisedClassNames = '', innerBlocks = [] } = block;
 
     const {
         mediaUrl,

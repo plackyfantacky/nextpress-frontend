@@ -1,8 +1,8 @@
 import React from "react";
 import { joinClassNames } from "@/lib/utils";
 
-export default function BlockGroup({ block, keyPrefix, children, inheritedProps = {} }) {
-    const { attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = '' } = block;
+export default function BlockGroup({ block, keyPrefix, children }) {
+    const { attrs = {}, idAttribute = '', normalisedClassNames = '' } = block;
     const { layout = {}, tagName: Tag = 'div' } = attrs;
     
     let groupClasses = [], flexboxClasses = [], gridClasses = [], gridChildClasses = []; //roll your sleeves up, this is going to be messy

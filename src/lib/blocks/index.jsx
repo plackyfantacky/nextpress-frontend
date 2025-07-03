@@ -1,27 +1,31 @@
+import React from 'react';
 import { extractAttributeValue, preprocessBlock } from '@/lib/utils';
 import { normaliseClassNames } from '@/lib/styler';
 import { processAttributesToClassNames } from '@/lib/attributes';
 
 const blockRenderers = {
-    'core/cover': () => import('./blockCover'),
-    'core/group': () => import('./blockGroup'),
-    'core/columns': () => import('./blockColumns'),
-    'core/column': () => import('./blockColumn'),
-    'core/image': () => import('./blockImage'),
-    'core/post-title': () => import('./blockPostTitle'),
-    'core/heading': () => import('./blockHeading'),
-    'core/paragraph': () => import('./blockParagraph'),
-    'core/quote': () => import('./blockQuote'),
+    'core/button': () => import('./blockButton'),
+    'core/buttons': () => import('./blockButtons'),
     'core/code': () => import('./blockCode'),
-    'core/preformatted': () => import('./blockPreformatted'),
-    'core/list': () => import('./blockList'),
-    'core/list-item': () => import('./blockListItem'),
-    'core/table': () => import('./blockTable'),
-    'core/pullquote': () => import('./blockPullquote'),
+    'core/column': () => import('./blockColumn'),
+    'core/columns': () => import('./blockColumns'),
+    'core/cover': () => import('./blockCover'),
     'core/details': () => import('./blockDetails'),
+    'core/group': () => import('./blockGroup'),
+    'core/heading': () => import('./blockHeading'),
+    'core/image': () => import('./blockImage'),
+    'core/list-item': () => import('./blockListItem'),
+    'core/list': () => import('./blockList'),
     'core/media-text': () => import('./blockMediaText'),
+    'core/paragraph': () => import('./blockParagraph'),
+    'core/post-title': () => import('./blockPostTitle'),
+    'core/preformatted': () => import('./blockPreformatted'),
+    'core/pullquote': () => import('./blockPullquote'),
+    'core/quote': () => import('./blockQuote'),
+    'core/table': () => import('./blockTable'),
 
     // Add other block renderers here
+    'outermost/icon-block': () => import('./block__outermost_iconBlock'),
 };
 
 /**

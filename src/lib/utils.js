@@ -15,6 +15,8 @@ export function joinClassNames(...args) {
  * Extracts the first occurrence of a specific HTML tag from a string.
  * @param {string} html - The HTML string to search within.
  * @param {string} tag - The tag name to extract (e.g., 'p', 'div').
+ * @param {boolean} contentOnly - If true, returns only the content inside the tag; otherwise, returns the full tag.
+ * @param {boolean} asString - If true, returns the first match as a string; if false, returns an array of all matches.
  * @returns {string|null} The first occurrence of the specified tag, or null if not found.
  */
 export function extractTag(html = '', tag = '', contentOnly = true, asString = true) {

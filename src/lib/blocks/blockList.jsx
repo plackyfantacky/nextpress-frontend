@@ -2,7 +2,7 @@ import React from "react";
 import { joinClassNames } from "@/lib/utils";
 import { renderBlocksRecursively } from "@/lib/blocks"; // from the index.js file in the blocks directory
 
-export default function BlockList({ block, keyPrefix, children, postContext = {} }) {
+export default function BlockList({ block, keyPrefix, postContext = {} }) {
     const { attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = '' } = block;
     const { ordered = false } = attrs;
 

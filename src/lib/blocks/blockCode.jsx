@@ -1,7 +1,7 @@
 import React from "react";
 import { joinClassNames, extractTag } from "@/lib/utils";
 import hljs from 'highlight.js';
-import parse from 'html-react-parser';
+import { parseHTML } from "../parser";
 
 const blockCode = ({ block, keyPrefix }) => {
     const { idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = '' } = block;
@@ -12,7 +12,7 @@ const blockCode = ({ block, keyPrefix }) => {
     
     const highlightedJSX = (() => {
         const result = hljs.highlightAuto(codeHTML);
-        return parse(result.value || '');
+        return parseHTML(result.value || '');
     })();
 
     return (

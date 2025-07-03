@@ -1,5 +1,12 @@
 node_modules/
 .next
 .env
+.vscode
+.DS_Store
+.safelist
+
+data
 
 src/app/safelist.css
+
+next-env.d.ts

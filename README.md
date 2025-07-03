@@ -24,8 +24,8 @@ This project is composed of two major parts:
 
 - `page.js` - 'Dynamic page renderer. Uses URL slug to fetch page metadata (e.g title, featured image url) and block data.
 
-### ── 📁 /src/components/
-**Purpose:** Shared folder for all React components (TODO: probably should separate these at some point.)
+### ── 📁 /src/partials/
+**Purpose:** Templates and partials for website sections
 
 - `Footer.jsx` - website footer
 - `Header.jsx` - website header
@@ -44,7 +44,7 @@ This project is composed of two major parts:
 
 - `api.js` — Fetches JSON data from endpoints.
 - `attributes.js` — Processes camalCase attribute strings into kebab-case Tailwind compatible classnames.
-- `parser.js` — Parses and renders inline HTML content (not block HTML).
+- `parser.jsx` — Parses and renders inline HTML content (not block HTML).
 - `performance.js` — Utility to track page render times.
 - `styler.js`- Convert WordPress style classnames to Tailwind 4.1 style classnames.
 - `utils.js` - Various utility functions including markup manipulation.
@@ -52,27 +52,27 @@ This project is composed of two major parts:
 #### ── 📁 /src/lib/blocks/
 **Purpose:** Houses block handler files for each WP block type.
 
-- `blockCode.js` - Renders code/code blocks; code content highlighted using Highlight.js
-- `blockColumns.js`, `blockColumn.js` — Handle column structures, pass down layout via `inheritedProps`.
-- `blockCover.js` — Renders core/cover blocks; handles dynamic tag, background image, color classes, inner blocks.
-- `blockDetails.js` - Renders core/details blocks; handles details/summary and nested block handling. 
-- `blockGroup.js` — Handles core/group blocks; supports layout contexts (stack, row, grid). Warning: Very complex.
-- `blockHeading.js` - Handles core/heading blocks; outputs HTML H1-H6 tags and renders inline HTML.
-- `blockImage.js` - Handles core/image blocks; optionally renders with a `<figure>` tag.
-- `blockList.js`, `blockListItem.js` - 'Handles list blocks and list items (ordered/unordered), passes down level data via `inheritedProps`.  
-- `blockMediaText.js` — Supports media alignment, figure output, etc.
-- `blockParagraph.js` - Renders a pargraph block; also renders inline HTML.
-- `blockPostTitle.js` - The first WP specific data block. Renders the current post/page title like a heading, using `postContext`.
-- `blockPreformatted.js` - Renders a block containing `<pre>`formatted text.
-- `blockPullquote.js` - Renders core/pullquote blocks; supports nested blocks and inline HTML.
-- `blockQuote.js` - Renders core/quote blocks; renders as `<blockquote>`, optionally with a `<figure>` tag.
-- `blockTable.js` - Renders core/table blocks; supports inline HTML rendering in cells.
-- `index.js` - Defines `renderBlock` and `renderBlocksRecursively` and dyanmically imports block files and injects data.
+- `blockCode.jsx` - Renders code/code blocks; code content highlighted using Highlight.js
+- `blockColumns.jsx`, `blockColumn.jsx` — Handle column structures, pass down layout via `inheritedProps`.
+- `blockCover.jsx` — Renders core/cover blocks; handles dynamic tag, background image, color classes, inner blocks.
+- `blockDetails.jsx` - Renders core/details blocks; handles details/summary and nested block handling. 
+- `blockGroup.jsx` — Handles core/group blocks; supports layout contexts (stack, row, grid). Warning: Very complex.
+- `blockHeading.jsx` - Handles core/heading blocks; outputs HTML H1-H6 tags and renders inline HTML.
+- `blockImage.jsx` - Handles core/image blocks; optionally renders with a `<figure>` tag.
+- `blockList.jsx`, `blockListItem.jsx` - 'Handles list blocks and list items (ordered/unordered), passes down level data via `inheritedProps`.  
+- `blockMediaText.jsx` — Supports media alignment, figure output, etc.
+- `blockParagraph.jsx` - Renders a pargraph block; also renders inline HTML.
+- `blockPostTitle.jsx` - The first WP specific data block. Renders the current post/page title like a heading, using `postContext`.
+- `blockPreformatted.jsx` - Renders a block containing `<pre>`formatted text.
+- `blockPullquote.jsx` - Renders core/pullquote blocks; supports nested blocks and inline HTML.
+- `blockQuote.jsx` - Renders core/quote blocks; renders as `<blockquote>`, optionally with a `<figure>` tag.
+- `blockTable.jsx` - Renders core/table blocks; supports inline HTML rendering in cells.
+- `index.jsx` - Defines `renderBlock` and `renderBlocksRecursively` and dyanmically imports block files and injects data.
 
 > ✅ Convention: Block files do **not** call `renderBlock` or `renderBlocksRecursively` directly.
 
 ### ── 📁 /src/components/
-**Purpose:** Shared folder for all React components (TODO: probably should separate these at some point.)
+**Purpose:** React components.
 
 - `Lightbox.jsx` — Renders a MicroModal enabled image and thumbnail.
 

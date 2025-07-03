@@ -30,10 +30,10 @@ export function normaliseClassNames(classList = '', { convert = true } = {}) {
 }
 
 const converters = [
-    convertBackgroundColor,
+    convertBackgroundColour,
     convertTextAlignment,
     convertFontSize,
-    convertTextColor,
+    convertTextColour,
     convertFontFamily,
     convertVerticalAlignment,
     convertPosition,
@@ -61,7 +61,7 @@ function applyConverters(classNames) {
  * @param {string} input - The background color string from WordPress.
  * @returns {string} The converted Tailwind CSS class for the background color.
  */
-function convertBackgroundColor(className) {
+export function convertBackgroundColour(className) {
     if (className.startsWith('has-') && className.endsWith('-background-color')) {
         const color = className.replace('has-', '').replace('-background-color', '');
         return `bg-${color}`;
@@ -74,7 +74,7 @@ function convertBackgroundColor(className) {
  * @param {string} className - The text alignment string from WordPress.
  * @returns {string} The converted Tailwind CSS class for text alignment.
  */
-function convertTextAlignment(className) {
+export function convertTextAlignment(className) {
     if (className.startsWith('has-text-align-')) {
         const alignment = className.replace('has-text-align-', '');
         if (alignment === 'left') return 'text-left';
@@ -91,7 +91,7 @@ function convertTextAlignment(className) {
  * @param {string} className - The font size string from WordPress.
  * @returns {string} The converted Tailwind CSS class for font size.
  */
-function convertFontSize(className) {
+export function convertFontSize(className) {
     if (className.startsWith('has-') && className.endsWith('-font-size')) {
         //check if the value already starts with "text-", if so, return without "has-" and "-font-size"
 
@@ -131,7 +131,7 @@ function convertFontSize(className) {
  * @param {string} className - The text color string from WordPress.
  * @returns {string} The converted Tailwind CSS class for text color.
  */
-function convertTextColor(className) {
+export function convertTextColour(className) {
     if (className.startsWith('has-') && className.endsWith('-color')) {
         const color = className.replace('has-', '').replace('-color', '');
         return `text-${color}`;
@@ -144,7 +144,7 @@ function convertTextColor(className) {
  * @param {string} className - The font family string from WordPress.
  * @returns {string} The converted Tailwind CSS class for font family.
  */
-function convertFontFamily(className) {
+export function convertFontFamily(className) {
     if (className.startsWith('has-') && className.endsWith('-font-family')) {
         const family = className.replace('has-', '').replace('-font-family', '');
         return `font-${family}`;
@@ -157,7 +157,7 @@ function convertFontFamily(className) {
  * @param {string} className - The vertical alignment string from WordPress.
  * @returns {string} The converted Tailwind CSS class for vertical alignment.
  */
-function convertVerticalAlignment(className) {
+export function convertVerticalAlignment(className) {
     if (className.startsWith('is-vertically-aligned-')) {
         const direction = className.replace('is-vertically-aligned-', '');
         if (direction === 'top') return 'items-start';
@@ -172,7 +172,7 @@ function convertVerticalAlignment(className) {
  * @param {string} className - The position string from WordPress.
  * @returns {string} The converted Tailwind CSS class for position.
  */
-function convertPosition(className) {
+export function convertPosition(className) {
     if (className.startsWith('is-position-')) {
         const [vertical, horizontal] = className.split(' ');
 
@@ -198,7 +198,7 @@ function convertPosition(className) {
  * @param {string} className - The alignment string from WordPress.
  * @returns {string} The converted Tailwind CSS class for alignment.
  */
-function convertAlignment(className) {
+export function convertAlignment(className) {
     if (className.startsWith('align')) {
         const align = className.slice(5);
         // TODO: left, right, and center are acceptable currently, but don't allow wraping
@@ -210,6 +210,45 @@ function convertAlignment(className) {
         if (align === 'full') return 'w-[100cqw]'; // Example for full width. I don't know if this is genius or madness, but it works.
     }
     return className;
+}
+
+// generic functions
+
+/**
+ * Converts a colour name to a Tailwind CSS class. Can be ued for background, text, or border colours.
+ * This function is generic and can be used for any colour name that follows the WordPress convention.
+ * Handles:
+ *  - named colours (e.g. 'vivid-red'),
+ *  - custom hex colours (e.g. '#ff0000'. rgb is converted to hex),
+ *  - block editor long class names (e.g. 'has-vivid-red-background-color').
+ *  - block markup preset strings (e.g 'var:preset|color|white'). 
+ * @param {string} colourNamePartial - The partial colour name from WordPress.
+ * @returns {string} The converted Tailwind CSS class for the colour.
+ */
+export function convertColour(colourNamePartial) {
+    if (!colourNamePartial || typeof colourNamePartial !== 'string') return '';
+    let colourName = colourNamePartial;
+    //determine the type of colour name
+    if (colourNamePartial.startsWith('has-') && colourNamePartial.endsWith('-color')) {
+        // block editor long class names
+        //also replace any 'text', 'link', 'border' or 'background' prefix/suffix
+        colourName = colourNamePartial
+            .replace('has-', '')
+            .replace('-color', '')
+            .replace('text-', '')
+            .replace('link-', '')
+            .replace('border-', '')
+            .replace('-background', '');
+    } else if (colourNamePartial.startsWith('var:preset|color|')) {
+        // block markup preset strings
+        colourName = colourNamePartial.replace('var:preset|color|', '');
+    } else if (colourNamePartial.startsWith('#')) {
+        // custom hex colours
+        // convert hex to Tailwind CSS format
+        colourName = `[${colourNamePartial}]`
+    }
+
+    return colourName; // Tailwind CSS arbitrary value syntax
 }
 
 // block spectific functions

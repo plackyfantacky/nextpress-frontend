@@ -1,98 +1,143 @@
-@layer base, theme, utilities;
-
 @import "tailwindcss";
 @import "highlight.js/styles/atom-one-dark.css";
-@import "./theme.css" layer(theme);
-@import "./safelist.css";
 
-@source inline("opacity-{0,10,20,30,40,50,60,70,80,90,100}");
-@source inline("justify-{start,end,center}");
-@source inline("items-{start,end,center}");
-@source inline("w-[100cqw]");
-@source inline("text-{2..9}xl");
-@source inline("col-span-{1..12}");
-@source inline("col-[span_{1..12}]");
+@config "../../tailwind.config.js";
+
 @source inline("[&>*]:text-white");
 @source inline("[&>*]:text-black");
 
-@layer base {
+@theme {
+    --text-h1: 2.986rem;
+    --text-h2: 2.488rem;
+    --text-h3: 2.074rem;
+    --text-h4: 1.728rem;
+    --text-h5: 1.44rem;
+    --text-h6: 1.2rem;
 
-    @theme {
-        --colspan-1: span 1;
-        --colspan-2: span 2;
-        --colspan-3: span 3;
-        --colspan-4: span 4;
-        --colspan-5: span 5;
-        --colspan-6: span 6;
-        --colspan-7: span 7;
-        --colspan-8: span 8;
-        --colspan-9: span 9;
-        --colspan-10: span 10;
-        --colspan-11: span 11;
-        --colspan-12: span 12;
+    --colspan-1: span 1;
+    --colspan-2: span 2;
+    --colspan-3: span 3;
+    --colspan-4: span 4;
+    --colspan-5: span 5;
+    --colspan-6: span 6;
+    --colspan-7: span 7;
+    --colspan-8: span 8;
+    --colspan-9: span 9;
+    --colspan-10: span 10;
+    --colspan-11: span 11;
+    --colspan-12: span 12;
     
-        --text-h1: 3.815rem;
-        --text-h2: 3.052rem;
-        --text-h3: 2.441rem;
-        --text-h4: 1.953rem;
-        --text-h5: 1.563rem;
-        --text-h6: 1.25rem;
+    /* TODO: investigate why these aren't coming through to the frontend. */
+    --text-base: 1rem;
+    --text-sm: 0.875rem;
+    --text-xs: 0.75rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+    --text-5xl: 3rem;
+    --text-6xl: 3.75rem;
+    --text-7xl: 4.5rem;
+    --text-8xl: 6rem;
+    --text-9xl: 8rem;
     
-        /* TODO: investigate why these aren't coming through to the frontend. */
-        --text-base: 1rem;
-        --text-sm: 0.875rem;
-        --text-xs: 0.75rem;
-        --text-2xl: 1.5rem;
-        --text-3xl: 1.875rem;
-        --text-4xl: 2.25rem;
-        --text-5xl: 3rem;
-        --text-6xl: 3.75rem;
-        --text-7xl: 4.5rem;
-        --text-8xl: 6rem;
-        --text-9xl: 8rem;
+    --width-content: 40rem;
+    --width-wide: 60rem;
     
-        --width-content: 40rem;
-        --width-wide: 60rem;
-    }
+    /* Wordpress default colours */
+    --color-cyan-bluish-gray: #abb8c3;
+    --color–pale-pink: #f78da7;
+    --color-vivid-red: #cf222e;
+    --color-vivid-orange: #ff6900;
+    --color-luminous-vivid-amber: #fcb900;
+    --color-light-green-cyan: #7bdcb5;
+    --color-vivid-green-cyan: #00d084;
+    --color-pale-cyan-blue: #8ed1fc;
+    --color-vivid-cyan-blue: #0693e3;
+    --color-vivid-purple: #9b51e0;
+
+    /* my custom colours */
+    --color-primary: #f99d2a;
+    --color-secondary: #ae6e1d;
+    --color-carona: #f99d2a;
+    --color-hamtaro-brown: #ae6e1d;
+    --color-inkwell: #1e1e1e;
+    --color-torchlight: #ffca8a;
+    --color-blanched-almond: #ffebd2;
+    --color-tuscan: #ffd7a6;
+    --color-copious-caramel: #d98823;
+    --color-peach-beach: #ffd0a2;
+    --color-bisque: #ffe3c7;
+    --color-chocolate-castle: #462805;
+    --color-ash: #c2bba6;
+    --color-black-mana: #848484;
+    --color-vulcanised: #434343;
+    --color-inkwell-inception: #1e1e1e;
+}
+
+@layer base {
     
     h1 {
-        @apply text-h1 leading-[1.6] font-bold;
+        font-size: var(--text-h1);
+        @apply leading-[1.6] font-bold;
     }
     
     h2 {
-        @apply text-h2 leading-[1.6] font-bold;
+        font-size: var(--text-h2);
+        @apply leading-[1.6] font-bold;
     }
     
     h3 {
-        @apply text-h3 leading-[1.6] font-bold;
+        font-size: var(--text-h3);
+        @apply leading-[1.6] font-bold;
     }
     
     h4 {
-        @apply text-h4 leading-[1.6] font-bold;
+        font-size: var(--text-h4);
+        @apply leading-[1.6] font-bold;
     }
     
     h5 {
-        @apply text-h5 leading-[1.6] font-bold;
+        font-size: var(--text-h5);
+        @apply leading-[1.6] font-bold;
     }
     
     h6 {
-        @apply text-h6 leading-[1.6] font-bold;
+        font-size: var(--text-h6);
+        @apply leading-[1.6] font-bold;
     }
     
     p {
         @apply text-base font-light;
     }
     
-    .modal {
-        display: none;
-    
-        &.is-open {
-            display: block;
-        }
-    }
-    
     .code-block {
         @apply p-4 overflow-scroll;
     }
 
+    .section1 {
+        .cover-block {
+            .cover-image {
+                @apply bg-no-repeat bg-cover bg-center;
+            }
+    
+            .cover-content {
+                h1 {
+                    @apply leading-[1];
+                }
+            }
+        }
+    }
+
+    .button-block {
+        @apply rounded-full;
+    }
+
+}
+
+.modal {
+    display: none;
+
+    &.is-open {
+        display: block;
+    }
 }

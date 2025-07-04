@@ -23,6 +23,7 @@
                 "name": "next"
             }
         ],
+        "pretty": true,
         "baseUrl": "src",
         "paths": {
             "@/*": [

@@ -4,15 +4,11 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "generate": "node scripts/build--generate-static-html.js",
-        "generate:html": "tsx --tsconfig tsconfig.json scripts/build--generate-static-html.tsx",
-        "safelist": "node scripts/build-safelist.js",
-        "safelist:watch": "node scripts/build-safelist.js --watch",
-        "watch": "concurrently -n 'SAFELIST,NEXT' -c 'yellow.bold,cyan.bold' \"node scripts/build-safelist.js\" \"next dev\" ",
+        "generate": "tsx --tsconfig tsconfig.json scripts/build--generate-static-html.tsx",
         "dev": "next dev",
         "start": "next start",
         "lint": "next lint",
-        "build": "npm run safelist && next build"
+        "build": "next build"
     },
     "dependencies": {
         "highlight.js": "^11.11.1",
@@ -24,11 +20,13 @@
     },
     "devDependencies": {
         "@tailwindcss/cli": "^4.1.10",
-        "@tailwindcss/postcss": "^4",
+        "@tailwindcss/postcss": "^4.1.11",
         "@types/node": "24.0.10",
         "@types/react": "19.1.8",
+        "autoprefixer": "^10.4.21",
         "concurrently": "^9.1.2",
         "dotenv": "^16.5.0",
+        "fast-glob": "^3.3.3",
         "https-proxy-agent": "^7.0.6",
         "prettier": "^3.6.2",
         "prettier-plugin-tailwindcss": "^0.6.13",

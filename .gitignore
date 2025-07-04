@@ -3,7 +3,11 @@ node_modules/
 .env
 .vscode
 .DS_Store
+.editorconfig
+
 .safelist
+_safelist
+
 
 data
 

@@ -1,45 +1,123 @@
 // scripts/build--generate-static-html.tsx
+import dotenv from "dotenv";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const envPath = path.resolve(__dirname, "../.env");
+
+dotenv.config({ path: envPath });
+
+if (!process.env.WP_URL) {
+    throw new Error(
+        "WP_URL is not defined. Please set it in your environment variables.",
+    );
+}
+
+const OUTPUT_DIR = path.resolve(__dirname, "../", process.env.OUTPUT_DIR);
+
+import React from "react";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import React from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToReadableStream } from "react-dom/server.edge";
+import fg from "fast-glob";
 import prettier from "prettier";
+import { parseBlocks, renderBlock } from "../src/lib/blocks/index.js";
+import { getAllPagesWithSlugs, getPageBySlug } from "../src/lib/api.js";
 
-// 👇 local path helper (avoids import.meta.url issues)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+if (fs.existsSync(OUTPUT_DIR)) {
+    // Clear output directory
+    const stalefiles = await fg(`${OUTPUT_DIR}/**/*.html`);
+    stalefiles.forEach((file) => fs.rmSync(file));
+    console.log(`🗑️  Removed stale files in ${OUTPUT_DIR}`);
+}
 
-// 👇 use explicit relative paths (no aliasing)
-import blockData from "../data/block-data-sample-01-07-2025.json" assert { type: "json" };
-import { renderBlocksRecursively } from "../src/lib/blocks/index.js";
+// get list of all page slugs
+const pages = await getAllPagesWithSlugs();
+if (!pages || pages.length === 0) {
+    console.warn("⚠️ No pages found. Please check your API connection.");
+    process.exit(1);
+}
+console.log(`📄 Found ${pages.length} pages to process.`);
 
-const OUTPUT_DIR = path.resolve(__dirname, "../.safelist");
+const pageMeta = pages
+    .map((page) => {
+        const slug = page?.node?.slug;
+        const uri = page?.node?.uri?.replace(/^\/|\/$/g, ""); // strip leading/trailing slash
 
-// Hardcoded slug list for now
-const pages = [{ slug: "index", dataKey: [0, 2, 4] }];
+        const outputPath = uri === "home" ? "index" : uri; // use index.html for home
+        return {
+            slug,
+            uri,
+            outputPath,
+        };
+    })
+    .filter((page) => page.uri);
 
-// Render HTML for a single page
-async function renderPage(slug, dataKeys) {
-    const pagePath = path.join(OUTPUT_DIR, `${slug}.html`);
-    const blocks = dataKeys.map((key) => blockData[key]).filter(Boolean);
-    const children = await renderBlocksRecursively(blocks);
-    const html = renderToStaticMarkup(<>{children}</>);
+async function readableStreamToString(stream: ReadableStream): Promise<string> {
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
+    let result = "";
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        result += decoder.decode(value, { stream: true });
+    }
+
+    return result;
+}
+
+async function renderPageHTML(uri: string, outputPath: string) {
+    const page = await getPageBySlug(uri);
+    if (!page || !page.slug || !page.blocksJSON) {
+        throw new Error(`Invalid or empty page returned for slug: ${uri}`);
+    }
+
+    const postContext = { postSlug: page.slug };
+    const blocks = parseBlocks(page.blocksJSON);
+
+    // Render blockdata as HTML
+    const renderedBlocks = await Promise.all(
+        blocks.map((block, i) => {
+            try {
+                return renderBlock(block, `block-${i}`, postContext);
+            } catch (err) {
+                console.warn(
+                    `⚠️ Error rendering block[${i}] for ${uri}:`,
+                    err.message,
+                );
+                return null;
+            }
+        }),
+    );
+
+    const stream = await renderToReadableStream(<>{renderedBlocks}</>);
+    await stream.allReady;
+    const html = await readableStreamToString(stream);
+
     const prettyHTML = await prettier.format(html, { parser: "html" });
 
-    // Create directories if needed
-    const dir = path.dirname(pagePath);
-    fs.mkdirSync(dir, { recursive: true });
+    console.log("");
+    console.log("→ outputPath:", outputPath);
+    console.log("→ full path:", path.join(OUTPUT_DIR, `${outputPath}.html`));
+    console.log("→ html type:", typeof html);
+    console.log("→ html length:", html?.length);
+
+    const pagePath = path.join(OUTPUT_DIR, `${outputPath}.html`);
+
     // Save HTML to file
+    fs.mkdirSync(path.dirname(pagePath), { recursive: true });
     fs.writeFileSync(pagePath, prettyHTML);
     console.log(
-        `✅ Generated HTML for /${slug} → ${path.relative(process.cwd(), pagePath)}`,
+        `✅ Generated HTML for /${uri} → ${path.relative(process.cwd(), pagePath)}`,
     );
 }
 
 // Main
 (async () => {
-    for (const { slug, dataKey } of pages) {
-        await renderPage(slug, dataKey);
+    //for every slug, fetch using getPageBySlug and then parseBlocks(page.blocksJSON), then output that to {slug}.html in the output directory
+    for (const { uri, outputPath } of pageMeta) {
+        await renderPageHTML(uri, outputPath);
     }
 })();

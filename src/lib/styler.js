@@ -42,8 +42,8 @@ const converters = [
     convertStackedOnMobile,
     convertParallax,
     convertRepeat,
-    // Add more converters as needed
-
+    convertRoundedStyle,
+    convertItemsJustification 
 ];
 
 function applyConverters(classNames) {
@@ -297,5 +297,31 @@ function convertParallax(className) {
  */
 function convertRepeat(className) {
     if (className === 'is-repeated') return 'bg-repeat';
+    return className;
+}
+
+/**
+ * Converts a rounded style class from WordPress to Tailwind CSS.
+ * @param {string} className - The class name from WordPress.
+ * @returns {string} The converted Tailwind CSS class for rounded style.
+
+ */
+function convertRoundedStyle(className) {
+    if (className === 'is-style-rounded') return 'rounded-full overflow-hidden';
+    return className;
+}
+
+/**
+ * Converts a 3rd-party justification class (outermost/icon) to Tailwind CSS.
+ * @param {string} className - The class name from the plugin.
+ * @returns {string} The converted Tailwind CSS class for items justification.
+ */
+function convertItemsJustification(className) {
+    if (className.startsWith('items-justified-')) {
+        const justification = className.replace('items-justified-', '');
+        if (justification === 'left') return 'justify-start';
+        if (justification === 'center') return 'justify-center';
+        if (justification === 'right') return 'justify-end';
+    }
     return className;
 }

@@ -23,8 +23,7 @@ const Figure = ({children, ...props}) => {
         {...(width ? { width } : {})}
         {...(height ? { height } : {})}
         {...(imgID ? { id: imgID} : {}) }
-        {...(imgClassNames ? { className: imgClassNames } : {})}
-        {...(objectFit ? { style: { objectFit } } : {})} />;
+        className={[ imgClassNames, objectFit === 'cover' ? 'object-cover' : '' ].filter(Boolean).join(' ')} />;
 
     const content = lightbox
         ? <Lightbox

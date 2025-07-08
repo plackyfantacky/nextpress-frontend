@@ -8,9 +8,6 @@ const contentPaths = [
     './src/lib/**/*.{js,ts,jsx,tsx}'
 ];
 
-const matchedFiles = glob.sync(contentPaths, { dot: true });
-console.log("Matched files:", matchedFiles);
-
 module.exports = {
     content: contentPaths,
     theme: {

@@ -23,16 +23,21 @@ export function processAttributesToClassNames(attrs = {}, includeCoreClasses = f
     };
 
     //potential classNames from WordPress that could be converted to Tailwind CSS classes
-    const potentialTailwindClasses = {
+    const marginGroup = {
         marginTop: 'mt',
         marginBottom: 'mb',
         marginLeft: 'ml',
-        marginRight: 'mr',
+        marginRight: 'mr'
+    };
+
+    const paddingGroup = {
         paddingTop: 'pt',
         paddingBottom: 'pb',
         paddingLeft: 'pl',
-        paddingRight: 'pr',
-        containerWidth: 'w',
+        paddingRight: 'pr'
+    };
+
+    const otherClasses = {
         containerHeight: 'h',
         gapHorizontal: 'gap-x',
         gapVertical: 'gap-y',
@@ -49,16 +54,53 @@ export function processAttributesToClassNames(attrs = {}, includeCoreClasses = f
         });
     }
 
-    // Convert potential class names to Tailwind CSS classes
-    Object.entries(potentialTailwindClasses).forEach(([key, prefix]) => {
-        if (attrs[key]) {
-            const value = attrs[key];
-            classNames.push(`${prefix}-[${value}]`);
+    addDirectionalSpacing(attrs, 'm', ['marginTop', 'marginBottom', 'marginLeft', 'marginRight'], classNames);
+    addDirectionalSpacing(attrs, 'p', ['paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight'], classNames);
+
+    Object.entries(otherClasses).forEach(([key, prefix]) => {
+        const val = attrs[key];
+        if (val !== undefined && val !== null && `${val}` !== '0') {
+            classNames.push(`${prefix}-[${val}]`);
         }
     });
 
+    //special case for containerWidth. if present, also check for attrs.containerType. if that is present and equals 'boxed', then add a class for the width.
+    if (attrs.containerType === 'boxed') {
+        if (attrs.containerWidth) {
+            classNames.push(`w-[${attrs.containerWidth}]`);
+        }
+    } else if (attrs.containerType === 'full') {
+        classNames.push('w-[100cqw]');
+    }
+
+
     return classNames
-        .flat() // allow arrays inside arguments
+        //.flat() // allow arrays inside arguments
         .filter(Boolean) // remove null, undefined, false, '', 0
-        .join(' ')
+        .join(' ');
+}
+
+function addDirectionalSpacing(attrs, prefix, keys, classNames) {
+    const [topKey, bottomKey, leftKey, rightKey] = keys;
+
+    const top = attrs[topKey];
+    const bottom = attrs[bottomKey];
+    const left = attrs[leftKey];
+    const right = attrs[rightKey];
+
+    const isNonZero = (v) => v !== undefined && v !== null && `${v}` !== '0';
+
+    if (isNonZero(top) && isNonZero(bottom) && top === bottom) {
+        classNames.push(`${prefix}y-[${top}]`);
+    } else {
+        if (isNonZero(top)) classNames.push(`${prefix}t-[${top}]`);
+        if (isNonZero(bottom)) classNames.push(`${prefix}b-[${bottom}]`);
+    }
+
+    if (isNonZero(left) && isNonZero(right) && left === right) {
+        classNames.push(`${prefix}x-[${left}]`);
+    } else {
+        if (isNonZero(left)) classNames.push(`${prefix}l-[${left}]`);
+        if (isNonZero(right)) classNames.push(`${prefix}r-[${right}]`);
+    }
 }

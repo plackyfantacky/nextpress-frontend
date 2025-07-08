@@ -28,8 +28,7 @@ export default function BlockImage({ block, keyPrefix }) {
 
     const figureClasses = joinClassNames(
         blockClassName,
-        normalisedClassNames,
-        imgWidth ? `w-[${imgWidth}]` : '',
+        normalisedClassNames
     );
 
     // The figcaption element (if any)

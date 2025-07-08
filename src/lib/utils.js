@@ -104,7 +104,10 @@ export function filterWPClassNames(classList = '') {
         'is-light',
         'is-dark',
         'wp-image-',
-        'wp-element-'
+        'wp-element-',
+        'is-resized',
+        'size-',
+        'alignwide'
     ];
 
     return classList

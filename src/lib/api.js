@@ -1,8 +1,14 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 const API_URL = process.env.WP_URL;
 const IS_DEV = process.env.NODE_ENV === 'development';
 
 export async function fetchAPI(query, { variables } = {}) {
     
+    if (!API_URL) {
+        throw new Error('API URL is not defined. Please set WP_URL in your environment variables.');
+    }
 
     const fetchOptions = {
         method: 'POST',
@@ -18,8 +24,11 @@ export async function fetchAPI(query, { variables } = {}) {
     };
 
     const res = await fetch(API_URL, fetchOptions);
+    if (!res.ok) {
+        console.error(`Error fetching API: ${res.status} ${res.statusText}`);
+        throw new Error(`Failed to fetch API: ${res.status} ${res.statusText}`);
+    }
     const json = await res.json();
-
     if (json.errors) {
         console.error(json.errors);
         throw new Error('Failed to fetch API');
@@ -35,6 +44,12 @@ export async function getAllPagesWithSlugs() {
                 edges {
                     node {
                         slug
+                        uri
+                        parent {
+                            node {
+                                uri
+                            }
+                        }
                     }
                 }
             }

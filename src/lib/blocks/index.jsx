@@ -28,6 +28,12 @@ const blockRenderers = {
     'outermost/icon-block': () => import('./block__outermost_iconBlock'),
 };
 
+//whitelist blocks that require prop inheritance
+const requireInheritedProps = new Set([
+    'core/columns',
+    'core/column'
+]);
+
 /**
  * Parses the JSON block data.
  * @param {*} blockData 
@@ -46,21 +52,20 @@ export function parseBlocks(blockData) {
 }
 
 export async function renderBlock(block, keyPrefix = 'block', postContext = {}, inheritedProps = {}) {
-    const { blockName, innerBlocks = [], innerHTML} = block;
+    const { blockName, innerBlocks = [], innerHTML } = block;
     if (!blockName && (!innerHTML || innerHTML.trim() === '')) { return null; }
+    const forwaredInheritedProps = requireInheritedProps.has(blockName) ? inheritedProps : undefined;
 
     block = preprocessBlock(block);
-    
+
     const wrapperTag = block.wrapperTag || '';
-    let normalisedClassNames = normaliseClassNames(extractAttributeValue({html: innerHTML, tag: wrapperTag, attribute: 'class'}) || '');
+    let normalisedClassNames = normaliseClassNames(extractAttributeValue({ html: innerHTML, tag: wrapperTag, attribute: 'class' }) || '');
     const processedAttributeClassNames = processAttributesToClassNames(block.attrs || {});
     const blockClassName = blockName.replace(/^core\//, '') + '-block';
-    const idAttribute = extractAttributeValue({html: innerHTML, attribute: 'id'}) || '';
-    
-    //console.log('processedAttributeClassNames', processedAttributeClassNames);
+    const idAttribute = extractAttributeValue({ html: innerHTML, attribute: 'id' }) || '';
 
     normalisedClassNames = normalisedClassNames ? `${normalisedClassNames} ${processedAttributeClassNames}` : processedAttributeClassNames;
-    
+
     //TO DO: investigate if its possible for WordPress to allow attributes to be passed in the block data.
     // If so, we'll need to handle that here somewhere.
 
@@ -69,12 +74,6 @@ export async function renderBlock(block, keyPrefix = 'block', postContext = {}, 
         console.warn(`Unhandled block type: ${blockName}`);
         return null;
     }
-
-    if(blockName === 'core/group') {
-        //console.log('block', block?.attrs);
-    }
-
-    //console.log('normalisedClassNames 1', normalisedClassNames);
 
     const children = await renderBlocksRecursively(innerBlocks, keyPrefix, postContext);
     const { default: Component } = await renderer();
@@ -86,7 +85,7 @@ export async function renderBlock(block, keyPrefix = 'block', postContext = {}, 
             block={{ ...block, idAttribute, blockClassName, normalisedClassNames }}
             postContext={postContext}
             children={children}
-            inheritedProps={inheritedProps}
+            inheritedProps={forwaredInheritedProps}
         />
     );
 

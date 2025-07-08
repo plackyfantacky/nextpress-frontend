@@ -68,14 +68,14 @@ export default function BlockCover({ block, keyPrefix, postContext, children }) 
     const blockContainerClasses = joinClassNames(
         blockClassName,
         normalisedPositioningClasses,
-        'relative flex flex-col @container/cover'
+        'relative flex-col @container/cover'
     );
 
     const blockImageClasses = joinClassNames(
         'cover-image',
         normalisedImageClasses,
         focalPointClass,
-        'absolute inset-0 z-0 flex w-full h-full',
+        'absolute inset-0 z-0 flex w-[100cqw]] h-full',
     );
 
     const blockImageStyle = {

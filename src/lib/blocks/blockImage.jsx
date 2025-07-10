@@ -1,9 +1,10 @@
 import React from 'react';
 import { joinClassNames, extractTag, extractAttributeValue } from "@/lib/utils";
 import { Figure } from '@/components/elements';
+import { normaliseClassNames } from "@/lib/styler";
 
 export default function BlockImage({ block, keyPrefix }) {
-    const { attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = ''} = block;
+    const { attrs = {}, idAttribute = '', blockClassName = '', processedClassNames = '', innerHTML = ''} = block;
     const { lightbox = { enabled: false }  } = attrs;
 
     //get the contents of the figure tag from the innerHTML - we're rebuilding it from scratch
@@ -25,6 +26,9 @@ export default function BlockImage({ block, keyPrefix }) {
         // If the image is linked, we need to wrap it in a link element. to do that we need to extract the link attributes
         linkHref = extractAttributeValue({ html: figureBody, attribute: 'href' });
     }
+
+    //normalise class names
+    let normalisedClassNames = normaliseClassNames(processedClassNames);
 
     const figureClasses = joinClassNames(
         blockClassName,

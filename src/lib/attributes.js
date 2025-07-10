@@ -1,73 +1,168 @@
 import { parse } from "path";
+import { filterWPClassNames, joinClassNames } from "@/lib/utils";
+import { convertColour } from "@/lib//styler";
 
 /**
- * Process an array of attribures for Tailwind like class names, and returns a string of class names.
- * Other className functionality is handled by the `normaliseClassNames` function.
- * 
- * Written as a pure function, so it can be used in other places without needing to import the `normaliseClassNames` function.
- * 
- * @params {object} attrs - The attributes object, typically from a block.
- * @returns {string} A string of class names suitable for use with Tailwind CSS.
+ * An array of functions that handle specific attributes and convert them to Tailwind CSS class names.
  */
-export function processAttributesToClassNames(attrs = {}, includeCoreClasses = false) {
+const attributeHandlers = [
+    handleAlign,
+    handleCustomContainer,
+    handleCustomGap,
+    handleCustomSpacing,
+    handleTextAlign,
+    handleLayout,
+    handleTextColor,
+    handleBackgroundColor,
+    handleFontSize,
+    handleStyle,
+    handleContentPosition
+];
+
+/**
+ * Processes the entire attrs object, going through section by section and calling the appropriate functions to convert attributes to Tailwind CSS class names.
+ * This is a monolith function that handles all attributes, including core classes, margin, padding, and other custom attributes.
+ * Garbage in, sanity out (hopefully).
+ * 
+ * @param {object} attrs - The attributes object containing various properties.
+ * @return {string} A string of Tailwind CSS class names derived from the attributes.
+ */
+export function processAttributesToClassNames(attrs = {}) {
+    const classes = attributeHandlers
+        .map(handler => handler(attrs))
+        .filter(Boolean); // filter out any empty strings
+
+    if (attrs.className) {
+        classes.push(filterWPClassNames(attrs.className));
+    }
+
+    return joinClassNames(...classes);
+}
+
+/**
+ * Handles the 'align' attribute and converts it to a Tailwind CSS class name. NOTE: there is a distinction between 'align' and 'textAlign' in WordPress.
+ * This function checks the 'align' property in the attrs object and returns the corresponding Tailwind CSS class name for flex alignment
+ * 
+ * @param {object} attrs - The attributes object containing the 'align' property.
+ * @return {string} A Tailwind CSS class name for the alignment, or an empty
+ */
+function handleAlign(attrs) {
+    if (!attrs || typeof attrs !== 'object' || !attrs.align) return '';
+
+    const align = attrs.align;
+    switch (attrs.align) {
+        case 'left': return 'float-left mr-4 mb-4';
+        case 'right': return 'float-right ml-4 mb-4';
+        case 'center': return 'mx-auto';
+        default: return '';
+    }
+}
+
+/**
+ * Handles the 'textAlign' attribute and converts it to a Tailwind CSS class name.
+ * This function checks the 'textAlign' property in the attrs object and returns the corresponding Tailwind CSS class name for text alignment.
+ * @param {object} attrs - The attributes object containing the 'textAlign' property.
+ * @return {string} A Tailwind CSS class name for the text alignment, or an empty string if not applicable.
+ */
+function handleTextAlign(attrs) {
+    if (!attrs || typeof attrs !== 'object' || !attrs.textAlign) return '';
+
+    const textAlign = attrs.textAlign;
+    switch (textAlign) {
+        case 'left': return 'text-left';
+        case 'right': return 'text-right';
+        case 'center': return 'text-center';
+        case 'justify': return 'text-justify';
+        default: return '';
+    }
+}
+
+/** * Handles custom spacing attributes and converts them to Tailwind CSS class names.
+ * This function checks for custom spacing attributes in the attrs object and returns the corresponding Tailwind CSS class names.
+ * @param {object} attrs - The attributes object containing custom spacing properties.
+ * @return {string} A string of Tailwind CSS class names for custom spacing, or an empty string if not applicable.
+ */
+function handleCustomSpacing(attrs) {
     if (!attrs || typeof attrs !== 'object') return '';
 
     const classNames = [];
 
-    // these attribute values may already have an associated className (which will be processed by `normaliseClassNames` function)
-    // so we don't normally need to include them here. some blocks won't have classNames at all, so we can include them here.
-    const coreClasses = {
-        backgroundColor: 'bg',
-        textColor: 'text',
-        fontSize: 'text',
-        fontFamily: 'font',
-        textAlign: 'text'
-    };
+    const isNonZero = (v) => v !== undefined && v !== null && `${v}` !== '0';
 
-    //potential classNames from WordPress that could be converted to Tailwind CSS classes
-    const marginGroup = {
-        marginTop: 'mt',
-        marginBottom: 'mb',
-        marginLeft: 'ml',
-        marginRight: 'mr'
-    };
+    const spacingGroups = [
+        {
+            prefix: 'm',
+            top: attrs.marginTop,
+            bottom: attrs.marginBottom,
+            left: attrs.marginLeft,
+            right: attrs.marginRight
+        },
+        {
+            prefix: 'p',
+            top: attrs.paddingTop,
+            bottom: attrs.paddingBottom,
+            left: attrs.paddingLeft,
+            right: attrs.paddingRight
+        }
+    ];
 
-    const paddingGroup = {
-        paddingTop: 'pt',
-        paddingBottom: 'pb',
-        paddingLeft: 'pl',
-        paddingRight: 'pr'
-    };
+    for(const group of spacingGroups) {
+        const { prefix, top, bottom, left, right } = group;   
 
-    const otherClasses = {
-        containerHeight: 'h',
-        gapHorizontal: 'gap-x',
-        gapVertical: 'gap-y',
-        width: 'w'
-    };
+        if (isNonZero(top) && isNonZero(bottom) && top === bottom) {
+            classNames.push(`${prefix}y-[${top}]`);
+        } else {
+            if (isNonZero(top)) classNames.push(`${prefix}t-[${top}]`);
+            if (isNonZero(bottom)) classNames.push(`${prefix}b-[${bottom}]`);
+        }
 
-    if (includeCoreClasses) {
-        // Add core classes if requested
-        Object.entries(coreClasses).forEach(([key, prefix]) => {
-            if (attrs[key]) {
-                const value = attrs[key];
-                classNames.push(`${prefix}-${value}`);
-            }
-        });
+        if (isNonZero(left) && isNonZero(right) && left === right) {
+            classNames.push(`${prefix}x-[${left}]`);
+        } else {
+            if (isNonZero(left)) classNames.push(`${prefix}l-[${left}]`);
+            if (isNonZero(right)) classNames.push(`${prefix}r-[${right}]`);
+        }
     }
 
-    addDirectionalSpacing(attrs, 'm', ['marginTop', 'marginBottom', 'marginLeft', 'marginRight'], classNames);
-    addDirectionalSpacing(attrs, 'p', ['paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight'], classNames);
+    return classNames.join(' ');
+}
 
-    Object.entries(otherClasses).forEach(([key, prefix]) => {
-        const val = attrs[key];
-        if (val !== undefined && val !== null && `${val}` !== '0') {
-            classNames.push(`${prefix}-[${val}]`);
-        }
-    });
+/**
+ * Handles custom gap attributes and converts them to Tailwind CSS class names.
+ * This function checks for custom gap attributes in the attrs object and returns the corresponding Tailwind CSS class names.
+ * @param {object} attrs - The attributes object containing custom gap properties.
+ * @return {string} A string of Tailwind CSS class names for custom gaps, or an empty string if not applicable.
+ */
+function handleCustomGap(attrs) {
+    if (!attrs || typeof attrs !== 'object') return '';
 
-    //special case for containerWidth. if present, also check for attrs.containerType. if that is present and equals 'boxed', then add a class for the width.
-    if (attrs?.containerType) {
+    const classNames = [];
+
+    const isNonZero = (v) => v !== undefined && v !== null && `${v}` !== '0';
+
+    if (isNonZero(attrs.gapHorizontal)) {
+        classNames.push(`gap-x-[${attrs.gapHorizontal}]`);
+    }
+    if (isNonZero(attrs.gapVertical)) {
+        classNames.push(`gap-y-[${attrs.gapVertical}]`);
+    }
+
+    return classNames.join(' ');
+}
+
+/**
+ * Handles custom container attributes and converts them to Tailwind CSS class names.
+ * This function checks for custom container attributes in the attrs object and returns the corresponding Tailwind CSS class names.
+ * @param {object} attrs - The attributes object containing custom container properties.
+ * @return {string} A string of Tailwind CSS class names for custom containers, or an empty string if not applicable.
+ */
+function handleCustomContainer(attrs) {
+    if (!attrs || typeof attrs !== 'object') return '';
+
+    const classNames = [];
+
+    // Handle container width and type
+    if (attrs.containerType) {
         switch (attrs.containerType) {
             case 'none':
                 classNames.push('max-w-none');
@@ -79,150 +174,273 @@ export function processAttributesToClassNames(attrs = {}, includeCoreClasses = f
                 classNames.push('flex-1 h-full');
                 break;
             case 'boxed':
-                if (attrs.containerWidth) {
+                if (attrs?.containerWidth) {
                     classNames.push(`w-[${attrs.containerWidth}]`);
+                }
+                if(attrs?.containerMXAuto) {
+                    classNames.push('mx-auto');
                 }
                 break;
             default:
-                // no default action needed
+            // no default action needed
         }
     }
 
-    return classNames
-        //.flat() // allow arrays inside arguments
-        .filter(Boolean) // remove null, undefined, false, '', 0
-        .join(' ');
+    return classNames.join(' ');
 }
 
-/**
- * Adds directional spacing classes to the classNames array based on the provided attributes.
- * @param {object} attrs - The attributes object containing spacing values.
- * @param {string} prefix - The prefix for the class names (e.g., 'm' for margin, 'p' for padding).
- * @param {Array} keys - An array of keys corresponding to the spacing values in the attrs object.
- * @param {Array} classNames - The array to which the generated class names will be added.
- * @returns {void} 
+/** 
+ * Handles layout attributes and converts them to Tailwind CSS class names.
+ * This function checks for layout attributes in the attrs object and returns the corresponding Tailwind CSS class names.
+ * @param {object} attrs - The attributes object containing layout properties.
+ * @return {string} A string of Tailwind CSS class names for layout, or an empty string if not applicable.
  */
-function addDirectionalSpacing(attrs, prefix, keys, classNames) {
-    const [topKey, bottomKey, leftKey, rightKey] = keys;
+function handleLayout(attrs) {
+    if (!attrs || typeof attrs !== 'object') return '';
 
-    const top = attrs[topKey];
-    const bottom = attrs[bottomKey];
-    const left = attrs[leftKey];
-    const right = attrs[rightKey];
+    const classNames = [];
 
-    const isNonZero = (v) => v !== undefined && v !== null && `${v}` !== '0';
+    // Handle layout type
+    if (attrs.layout?.type) {
+        switch (attrs.layout.type) {
+            case 'constrained':
+            case 'flex': {
+                classNames.push('flex');
+                attrs.layout?.orientation
+                    ? classNames.push(`flex-col`)
+                    : classNames.push('flex-row');
+                    
+                attrs.layout?.wrapping
+                    ? classNames.push('flex-wrap')
+                    : classNames.push('flex-nowrap');
 
-    if (isNonZero(top) && isNonZero(bottom) && top === bottom) {
-        classNames.push(`${prefix}y-[${top}]`);
-    } else {
-        if (isNonZero(top)) classNames.push(`${prefix}t-[${top}]`);
-        if (isNonZero(bottom)) classNames.push(`${prefix}b-[${bottom}]`);
-    }
+                const flexAlignmentMap = {
+                    'left': 'start',
+                    'right': 'end',
+                    'center': 'center',
+                    'justify': 'between',
+                    'start': 'start',
+                    'end': 'end'
+                };
 
-    if (isNonZero(left) && isNonZero(right) && left === right) {
-        classNames.push(`${prefix}x-[${left}]`);
-    } else {
-        if (isNonZero(left)) classNames.push(`${prefix}l-[${left}]`);
-        if (isNonZero(right)) classNames.push(`${prefix}r-[${right}]`);
-    }
-}
-
-/**
- * Extracts and parses styles stored within the style property of attributes.
- * A variety of blocks store styles in a nested object format, like this:
- * attrs.style.typography.fontWeight = '300';
- * This function extracts those styles and returns them as a flat object.
- * @param {object} attrs - The attributes object containing style properties.
- * @return {string} styles - string of styles we can normalise and use in classNames.
- */
-export function parseNestedStyleAttributes(attrs) {
-    if (!attrs || typeof attrs !== 'object' || !attrs.style) return {};
-
-    const styles = {};
-    const style = attrs.style;
-
-    // Flatten the nested style attributes
-    Object.entries(attrs.style).forEach(([groupKey, groupValue]) => {
-        if (typeof groupValue === 'object' && groupValue !== null) {
-            Object.entries(groupValue).forEach(([key, value]) => {
-                if (typeof value === 'string' || typeof value === 'number') {
-                    styles[key] = value;
+                if (attrs.layout?.justifyContent) {
+                    attrs.layout.orientation === 'vertical'
+                        ?  classNames.push(`items-${flexAlignmentMap[attrs.layout.justifyContent] || 'start'}`)
+                        : classNames.push(`justify-${flexAlignmentMap[attrs.layout.justifyContent] || 'start'}`);
                 }
-            });
-        } else if (typeof groupValue === 'string' || typeof groupValue === 'number') {
-            styles[groupKey] = groupValue;
-        }
-    });
-
-    // Convert styles to a string format suitable for class names
-    const styleEntries = Object.entries(styles)
-        .map(([key, value]) => {
-            // Convert camelCase to kebab-case for CSS properties
-            const kebabKey = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-            return `${kebabKey}:${value}`;
-        })
-        .join(';');
-        
-    return styleEntries ? `${styleEntries};` : '';
-}
-
-/**
- * Processes a CSS style string or object into Tailwind CSS class names.
- * This function takes a CSS style string or object and converts it into a string of Tailwind CSS class names.
- * It supports both inline styles (as a string) and nested styles (as an object).
- * 
- * @param {string|object} sourceData - The CSS style string or object to process.
- * @param {string} sourceType - The type of source data, either 'inline' for a string or 'nested' for an object.
- * @returns {string} A string of Tailwind CSS class names.
-*/
-export function processStylesToClassNames(sourceData, sourceType = 'nested') {
-    if (typeof sourceData === 'string' || sourceType === 'inline') {
-    return sourceData
-        .split(';')
-        .map(rule => rule.split(':').map(s => s.trim()))
-        .filter(([key, val]) => key && val)
-        .map(([key, val]) => {
-            switch(key) {
-                case 'margin-top': return `mt-[${val}]`;
-                case 'margin-bottom': return `mb-[${val}]`;
-                case 'margin-left': return `ml-[${val}]`;
-                case 'margin-right': return `mr-[${val}]`;
-                case 'padding-top': return `pt-[${val}]`;
-                case 'padding-bottom': return `pb-[${val}]`;
-                case 'padding-left': return `pl-[${val}]`;
-                case 'padding-right': return `pr-[${val}]`;
-                case 'width': return `w-[${val}]`;
-                case 'height': return `h-[${val}]`;
-                case 'font-size': return `text-[${val}]`;
-                //TODO: font-weight will be numerical e.g 300, 400, 500, etc
-                case 'font-weight': (val) => {
-                    const weightMap = {
-                        '100': 'thin',
-                        '200': 'extra-light',
-                        '300': 'light',
-                        '400': 'normal',
-                        '500': 'medium',
-                        '600': 'semi-bold',
-                        '700': 'bold',
-                        '800': 'extra-bold',
-                        '900': 'black'
-                    };
-                    return `font-${weightMap[val] || val}`;
+                if (attrs.layout?.verticalAlignment) {
+                    attrs.layout.orientation === 'vertical'
+                        ? classNames.push(`justify-${flexAlignmentMap[attrs.layout.verticalAlignment] || 'start'}`)
+                        : classNames.push(`items-${flexAlignmentMap[attrs.layout.verticalAlignment] || 'start'}`);
                 }
-                case 'font-family': return `font-${val}`;
-                case 'text-align': return `text-${val}`;
-                default: return '';
+                //handle blockgap
+                if (attrs.style?.spacing?.blockGap) {
+                    classNames.push(`gap-[${attrs.style.spacing.blockGap}]`);
+                } else if (attrs.layout?.gap) {
+                    classNames.push(`gap-[${attrs.layout.gap}]`);
+                }
             }
-        })
-        .filter(Boolean)
-        .join(' ');
-    };
-
-    if (typeof sourceData === 'object' && sourceType === 'nested') {
-        const flattened = parseNestedStyleAttributes(sourceData);
-        return typeof flattened === 'string' 
-            ? processStylesToClassNames(flattened, 'inline')
-            : ''
+            break;
+            case 'grid': {
+                classNames.push('grid');
+                /* coming from WordPress, either we have a columnCount (and maybe minimumColumnWidth = null) or a 
+                minimumColumnWidth (with columnCount = null). only one of these should be set. */
+                if (attrs.layout?.columnCount) {
+                    classNames.push(`grid-cols-${attrs.layout.columnCount}`);
+                } else if (attrs.layout?.minimumColumnWidth) {
+                    classNames.push(`grid-cols-[repeat(auto-fill,minmax(${attrs.layout.minimumColumnWidth}px,1fr))]`);
+                } else {
+                    classNames.push('grid-cols-1');
+                }
+                
+                // Handle grid gap
+                if (attrs.layout?.gap) {
+                    classNames.push(`gap-[${attrs.layout.gap}]`);
+                }
+            }
+            break;
+            
+            case 'block':
+            default: {
+                classNames.push('block');
+            }
+            break;
+        }
     }
-    return '';
+
+    // Handle custom layout attributes
+
+    const isGridChild = attrs?.style?.layout?.columnSpan || attrs?.style?.layout?.rowSpan;
+    if (isGridChild) {
+        if (attrs.style?.layout?.columnSpan) {
+            classNames.push(`col-span-${attrs.style.layout.columnSpan}`);
+        }
+        if (attrs.style?.layout?.rowSpan) {
+            classNames.push(`row-span-${attrs.style.layout.rowSpan}`);
+        }
+    }
+    
+    return classNames.join(' ');
+}
+
+/**
+ * Handles text color attributes and converts them to Tailwind CSS class names. Can handles attrs.textColor only
+ * @param {object} attrs - The attributes object containing text color properties.
+ * @return {string} A Tailwind CSS class name for the text color, or an empty string if not applicable.
+ */
+function handleTextColor(attrs) {
+    if (!attrs || typeof attrs !== 'object' || !attrs.textColor) return '';
+    
+    let textColor = attrs.textColor;
+    textColor = convertColour(textColor);
+    return `text-${textColor}`;
+
+}
+
+
+function handleBackgroundColor(attrs) {
+    if (!attrs || typeof attrs !== 'object' || !attrs.backgroundColor) return '';
+
+    let bgColor = attrs.backgroundColor;
+    bgColor = convertColour(bgColor);
+    return `bg-${bgColor}`;
+}
+
+/**
+ * Handles font size attributes and converts them to Tailwind CSS class names.
+ * This function checks for font size attributes in the attrs object and returns the corresponding Tailwind CSS class names.
+ * NOTE: this function is specifically for handling attrs.fontSize only. if font size are stored elsehwere, they should be handled in the handleStyle function.
+ * @param {object} attrs - The attributes object containing font size properties.
+ * @return {string} A Tailwind CSS class name for the font size, or an empty string if not applicable.
+ */
+function handleFontSize(attrs) {
+    if (!attrs || typeof attrs !== 'object' || !attrs.fontSize) return '';
+
+    const fontSize = attrs.fontSize;
+    // Tailwind uses rem units for font sizes, WordPress uses named sizes.
+    // Map WP font sizes to Tailwind CSS equivalents
+    const sizeMap = {
+        'small': 'sm',
+        'medium': 'base',
+        'large': 'lg',
+        'x-large': 'xl',
+        'xx-large': '2xl',
+        'huge': '3xl',
+        // Add more mappings as needed
+        // TO DO: maybe map these to a config file later?
+    };
+    const twSize = sizeMap[fontSize] || 'base'; // default to base if not found
+
+    return `text-${twSize}`;
+}
+
+/* here be dragons */
+
+/**
+ * Handles style attributes and converts them to Tailwind CSS class names.
+ * This function checks for style attributes in the attrs object and returns the corresponding Tailwind CSS class names.
+ * 
+ * we need to be able to handle the following:
+ * attrs.style
+ *  - typography
+ *  -- fontStyle
+ *  -- fontWeight (number)
+ *  -- fontSize (string, e.g. '16px', '1rem', '2em') for custom values
+ *  - elements
+ *  -- link
+ *  --- color
+ *  ---- text
+ *  - shadow
+ 
+ * @param {object} attrs - The attributes object containing style properties.
+ * @return {string} A string of Tailwind CSS class names for styles, or an empty string if not applicable.
+ */
+function handleStyle(attrs) {
+    if (!attrs || typeof attrs !== 'object') return '';
+
+    const classNames = [];
+
+    // Handle typography
+    if ( attrs.style?.typography ) {
+        const { fontStyle, fontWeight, fontSize } = attrs.style.typography;
+        if(fontStyle) classNames.push((fontStyle === 'italic') ? 'italic' : 'not-italic'); //Tailwind 4.1+
+
+        if (fontWeight) {
+            // Tailwind uses font-weight classes like 'font-light', 'font-normal', 'font-bold', etc.
+            // Map numeric font weights to Tailwind CSS equivalents
+            const weightMap = {
+                100: 'thin',
+                200: 'extralight',
+                300: 'light',
+                400: 'normal',
+                500: 'medium',
+                600: 'semibold',
+                700: 'bold',
+                800: 'extrabold',
+                900: 'black'
+            };
+            const twWeight = weightMap[fontWeight] || 'normal'; // default to normal if not found
+            classNames.push(`font-${twWeight}`);
+        }
+        if (fontSize) classNames.push(`text-[${fontSize}]`); // assuming fontSize is a valid CSS value like '16px', '1rem', etc.
+    }
+    if( attrs.style?.elements ) {
+        const elements = attrs.style.elements;
+        if(elements?.link?.color) classNames.push(`[&>a]:text-${convertColour(elements.link.color)}`);
+        if(elements?.heading?.text) {
+            const headingTextColor = convertColour(elements.heading.text);
+            classNames.push(`has-headings:text-${headingTextColor}`);
+        }
+        if(elements?.heading?.background) {
+            const headingBackgroundColor = convertColour(elements.heading.background);
+            classNames.push(`has-headings:bg-${headingBackgroundColor}`);
+        }
+    }
+
+    if( attrs.style?.shadow ) {
+
+    }
+
+
+    // // Handle text color e.g attrs.style?.elements?.text?.color
+    // if (attrs.style?.elements?.text?.color) {
+    //     let text = attrs.style.elements.text.color;
+    //     text = convertColour(text);
+    //     classNames.push(`text-${text}`);
+    // }
+
+    return classNames.join(' ');
+}
+
+
+/* special cases */
+
+/**
+ * core/cover has 'contentPosition' attributes that need to be handled.
+ * @param {object} attrs - The attributes object containing the 'contentPosition' and 'dimRatio' properties.
+ * @return {string} A Tailwind CSS class name for the content position, or an empty string if not applicable.
+ */
+function handleContentPosition(attrs) {
+    if (!attrs || typeof attrs !== 'object') return '';
+
+    const classNames = [];
+
+    //if contentPosition is set, we need to convert it to a Tailwind CSS class name
+    if(attrs?.contentPosition && typeof attrs.contentPosition === 'string') {
+        const position = attrs.contentPosition || 'center center';
+        const [vertical, horizontal] = position.split(' ');
+
+        // Map the horizontal and vertical positions to Tailwind CSS classes
+        const direction = {
+            left: 'start',
+            center: 'center',
+            right: 'end',
+            top: 'start',
+            bottom: 'end'
+        };
+        
+        classNames.push(`flex items-${direction[horizontal] || 'center'} justify-${direction[vertical] || 'center'}`);
+    }
+
+    return classNames.join(' ');
 }

@@ -2,7 +2,7 @@ import React from "react";
 import { joinClassNames } from "@/lib/utils";
 
 export default function BlockButtons({ block, keyPrefix, children}) {
-    const { attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = ''} = block;
+    const { attrs = {}, idAttribute = '', blockClassName = '', processedClassNames = ''} = block;
 
     const orientation = attrs.layout?.orientation || 'horizontal';
     const justifyContent = attrs.layout?.justifyContent || 'left';
@@ -15,7 +15,7 @@ export default function BlockButtons({ block, keyPrefix, children}) {
 
     const blockClassNames = joinClassNames(
         blockClassName,
-        normalisedClassNames,
+        processedClassNames,
         `flex gap-4 ${orientationClass} ${justifyContentClass} ${verticalAlignmentClass}`
     );
 

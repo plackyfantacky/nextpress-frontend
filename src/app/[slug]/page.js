@@ -1,5 +1,5 @@
-import { getPageBySlug } from "@/lib/api";
-import { parseBlocks, renderBlock } from "@/lib/blocks";
+import { getPageBySlug, parseBlocks } from '@/lib/api';
+import { renderBlock } from '@/lib/blocks';
 import { PerformanceMarker } from "@/lib/performance";
 
 export const dynamic = 'force-dynamic';

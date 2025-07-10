@@ -4,7 +4,7 @@ import { renderInlineHTML } from "@/lib/parser";
 import { extractTag, extractAttributeValue, joinClassNames } from "@/lib/utils";
 
 export default function BlockButton({ block, keyPrefix }) {
-    const {attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = '' } = block; 
+    const {attrs = {}, idAttribute = '', blockClassName = '', processedClassNames = '', innerHTML = '' } = block; 
     
     //button style defaults
     const bgColour = attrs.backgroundColor || '';
@@ -16,7 +16,7 @@ export default function BlockButton({ block, keyPrefix }) {
 
     const blockClassNames = joinClassNames(
         blockClassName,
-        normalisedClassNames,
+        processedClassNames,
         [(bgColour ? `bg-${bgColour}` : 'bg-[#32373c]')],
         [(textColour ? `text-${textColour}` : 'text-white')],
         `text-center`,

@@ -5,7 +5,7 @@ import { joinClassNames } from '@/lib/utils';
 import { Figure } from "@/components/elements";
 
 export default function BlockMediaText({ block, keyPrefix, postContext }) {
-    const { attrs = {}, idAttribute = '', normalisedClassNames = '', innerBlocks = [] } = block;
+    const { attrs = {}, idAttribute = '', processedClassNames = '', innerBlocks = [] } = block;
 
     const {
         mediaUrl,
@@ -35,7 +35,7 @@ export default function BlockMediaText({ block, keyPrefix, postContext }) {
         `media-text--${isStackedOnMobile ? 'stacked' : 'inline'}`,
         `media-text--${imageFill ? 'fill' : 'contain'}`,
         alignmentClass,
-        normalisedClassNames
+        processedClassNames
     );
 
     const imageSrc = mediaUrl || (useFeaturedImage ? postContext?.postImage : null);

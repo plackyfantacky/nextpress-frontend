@@ -13,7 +13,7 @@ export function normaliseClassNames(classList = '', { convert = true } = {}) {
 
     //console.log('BEFORE', classList);
 
-    let newClassList = filterWPClassNames(classList)
+    let newClassList = classList
         .split(/\s+/)
         .filter(Boolean)
         .filter(cls => {
@@ -24,7 +24,7 @@ export function normaliseClassNames(classList = '', { convert = true } = {}) {
         .map(cls => convert ? applyConverters(cls) : cls)
         .join(' ');
 
-    //console.log('AFTER', newClassList);
+    classList = filterWPClassNames(newClassList);
 
     return newClassList;
 }
@@ -207,7 +207,7 @@ export function convertAlignment(className) {
         if (align === 'center') return 'self-center mx-auto';
         // TODO: haven't tested these with images/figures. They do work with group-blocks.
         //if (align === 'wide') return 'w-wide mx-auto'; // Example for wide alignment
-        if (align === 'full') return 'w-[100cqw]'; // Example for full width. I don't know if this is genius or madness, but it works.
+        // if (align === 'full') return 'w-[100cqw]'; // Example for full width. I don't know if this is genius or madness, but it works.
     }
     return className;
 }

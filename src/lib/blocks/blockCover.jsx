@@ -12,18 +12,11 @@ export default function BlockCover({ block, keyPrefix, postContext, children }) 
         customOverlayColor = '', // this is not output in innerHTML, so process it directly
         dimRatio = 100, // append to bg- classes
         focalPoint = { x: 0.5, y: 0.5 },
-        contentPosition = 'center center', // this is not output in innerHTML, so process it directly. order is vertical horizontal.
         tagName: Tag = 'section', // this is not output in innerHTML, so process it directly
     } = attrs;
 
     let normalisedImageClasses = normaliseClassNames(extractAttributeValue({ html: innerHTML, attribute: 'class', tag: 'div', index: 1 }) || '');
     let normalisedOverlayClasses = normaliseClassNames(extractAttributeValue({ html: innerHTML, attribute: 'class', tag: 'span' }) || '');
-
-    const [vertical, horizontal] = contentPosition.split(' ');
-    const direction = { left: 'start', center: 'center', right: 'end' };
-
-    let normalisedPositioningClasses = `flex items-${direction[horizontal] || 'center'} justify-${direction[vertical] || 'center'}`;
-
     const imageURL = (useFeaturedImage ? postContext?.postImage : url) || '';
 
     //if focalPoint is something other than { x: 0.5, y: 0.5 }, then we need to set the background position as a tailwind class
@@ -44,38 +37,21 @@ export default function BlockCover({ block, keyPrefix, postContext, children }) 
 
     let colorClasses = [];
     if (textColour) { colorClasses.push(`[&>*]:text-${textColour}`); }
-    if (headingTextColour) {
-        colorClasses.push(
-            `[&_h1]:text-${headingTextColour}`,
-            `[&_h2]:text-${headingTextColour}`,
-            `[&_h3]:text-${headingTextColour}`,
-            `[&_h4]:text-${headingTextColour}`,
-            `[&_h5]:text-${headingTextColour}`,
-            `[&_h6]:text-${headingTextColour}`
-        );
-    }
-    if (headingBackgroundColour) {
-        colorClasses.push(
-            `[&_h1]:bg-${headingBackgroundColour}`,
-            `[&_h2]:bg-${headingBackgroundColour}`,
-            `[&_h3]:bg-${headingBackgroundColour}`,
-            `[&_h4]:bg-${headingBackgroundColour}`,
-            `[&_h5]:bg-${headingBackgroundColour}`,
-            `[&_h6]:bg-${headingBackgroundColour}`
-        );
-    }
+    
+    // using addVariant in tailwind.config.js, we can add a variant for headings
+    if (headingTextColour) colorClasses.push(`has-headings:text-${headingTextColour}`);
+    if (headingBackgroundColour) colorClasses.push(`has-headings:bg-${headingBackgroundColour}`);
 
     const blockContainerClasses = joinClassNames(
         blockClassName,
-        normalisedPositioningClasses,
-        'relative flex-col @container/cover'
+        'relative flex flex-col w-[100cqw] @container/cover'
     );
 
     const blockImageClasses = joinClassNames(
         'cover-image',
         normalisedImageClasses,
-        focalPointClass,
-        'absolute inset-0 z-0 flex w-[100cqw]] h-full',
+        'absolute inset-0 z-0 flex w-full h-full',
+        focalPointClass
     );
 
     const blockImageStyle = {
@@ -85,8 +61,8 @@ export default function BlockCover({ block, keyPrefix, postContext, children }) 
     const blockOverlayClasses = joinClassNames(
         'cover-overlay',
         normalisedOverlayClasses,
-        dimRatioClass,
         'absolute inset-0 z-[1] pointer-events-none',
+        dimRatioClass
     );
 
     const blockOverlayStyle = customOverlayColor ? { backgroundColor: customOverlayColor } : {};

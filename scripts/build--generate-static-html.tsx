@@ -22,8 +22,8 @@ import { fileURLToPath } from "url";
 import { renderToReadableStream } from "react-dom/server.edge";
 import fg from "fast-glob";
 import prettier from "prettier";
-import { parseBlocks, renderBlock } from "../src/lib/blocks/index.js";
-import { getAllPagesWithSlugs, getPageBySlug } from "../src/lib/api.js";
+import { renderBlock } from "../src/lib/blocks/index.js";
+import { getAllPagesWithSlugs, getPageBySlug, parseBlocks } from "../src/lib/api.js";
 
 if (fs.existsSync(OUTPUT_DIR)) {
     // Clear output directory

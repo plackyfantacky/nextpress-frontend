@@ -1,5 +1,5 @@
-import { getHomePageBlocks } from '@/lib/api';
-import { parseBlocks, renderBlock } from '@/lib/blocks';
+import { getHomePageBlocks, parseBlocks } from '@/lib/api';
+import { renderBlock } from '@/lib/blocks';
 import { PerformanceMarker } from "@/lib/performance";
 
 export default async function Homepage() {

@@ -4,7 +4,7 @@ import { joinClassNames, extractTag } from '@/lib/utils';
 import { renderInlineHTML } from '@/lib/parser';
 
 export default function BlockTable({ block, keyPrefix }) {
-    const { attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = '' } = block;
+    const { attrs = {}, idAttribute = '', blockClassName = '', processedClassNames = '', innerHTML = '' } = block;
     const { hasFixedLayout = false } = attrs;
 
     const figureClassNames = joinClassNames(
@@ -14,7 +14,7 @@ export default function BlockTable({ block, keyPrefix }) {
     const tableClassNames = joinClassNames(
         `{blcokClassName}__table`,
         hasFixedLayout ? 'table-fixed' : '',
-        normalisedClassNames
+        processedClassNames
     );
 
      const caption = extractTag(innerHTML, 'figcaption', true) || '';

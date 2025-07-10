@@ -4,7 +4,7 @@ import { renderInlineHTML } from '@/lib/parser';
 import { Cite, Figure } from '@/components/elements';
 
 const Blockquote = ({ block, keyPrefix, wrapInFigure = false, children }) => {
-    const { idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = '' } = block;
+    const { idAttribute = '', blockClassName = '', processedClassNames = '', innerHTML = '' } = block;
 
     const hasChildren = Array.isArray(children) && children.length > 0;
     const citation = extractTag(innerHTML, 'cite', true) || '';
@@ -22,7 +22,7 @@ const Blockquote = ({ block, keyPrefix, wrapInFigure = false, children }) => {
     }
 
     const blockquoteClass = children?.length
-        ? `${blockClassName} ${normalisedClassNames}`
+        ? `${blockClassName} ${processedClassNames}`
         : `${blockClassName}__blockquote`;
 
     const quoteElement = (

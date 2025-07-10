@@ -8,7 +8,7 @@ import { A, Image } from '@/components/elements';
  * @param {string} style - The inline style string.
  * @returns {object} The parsed style object.
  */
-function parseStyleString(style = '') {
+export function parseStyleStringToObject(style = '') {
     return style
         .split(';')
         .filter(Boolean)
@@ -258,7 +258,7 @@ function transformKeyboardTag(node, index, keyPrefix) {
 function transformMarkTag(node, index, keyPrefix) {
     if (node.type === 'tag' && node.name === 'mark') {
         const { attribs = {}, children = [] } = node;
-        const style = parseStyleString(attribs?.style || '');
+        const style = parseStyleStringToObject(attribs?.style || '');
         const classNames = normaliseClassNames(attribs?.class || '');
 
         return (
@@ -280,7 +280,7 @@ function tranformImage(node, index, keyPrefix) {
     if (node.type === 'tag' && node.name === 'img') {
         const { attribs = {} } = node;
         const { src, alt = '', title = '', style: rawStyle = '' } = attribs;
-        const parsedStyle = parseStyleString(rawStyle) || {
+        const parsedStyle = parseStyleStringToObject(rawStyle) || {
             display: 'inline',
             maxHeight: '1em',
             verticalAlign: 'middle'
@@ -357,7 +357,7 @@ function transformSpan(node, index, keyPrefix) {
     if (node.type === 'tag' && node.name === 'span') {
         const { attribs = {}, children = [] } = node;
         const classNames = normaliseClassNames(attribs?.class || '');
-        const style = parseStyleString(attribs?.style || '');
+        const style = parseStyleStringToObject(attribs?.style || '');
         
         return (
             <span key={`${keyPrefix}-${index}`} className={classNames} style={style}>
@@ -380,7 +380,7 @@ function transformDiv(node, index, keyPrefix) {
     if (node.type === 'tag' && node.name === 'div') {
         const { attribs = {}, children = [] } = node;
         const classNames = normaliseClassNames(attribs?.class || '');
-        const style = parseStyleString(attribs?.style || '');
+        const style = parseStyleStringToObject(attribs?.style || '');
         
         return (
             <div key={`${keyPrefix}-${index}`} className={classNames} style={style}>
@@ -401,7 +401,7 @@ function transformParagraph(node, index, keyPrefix) {
     if (node.type === 'tag' && node.name === 'p') {
         const { attribs = {}, children = [] } = node;
         const classNames = normaliseClassNames(attribs?.class || '');
-        const style = parseStyleString(attribs?.style || '');
+        const style = parseStyleStringToObject(attribs?.style || '');
         
         return (
             <p key={`${keyPrefix}-${index}`} className={classNames} style={style}>
@@ -460,7 +460,7 @@ function transformCite(node, index, keyPrefix) {
     if (node.type === 'tag' && node.name === 'cite') {
         const { attribs = {}, children = [] } = node;
         const classNames = normaliseClassNames(attribs?.class || '');
-        const style = parseStyleString(attribs?.style || '');
+        const style = parseStyleStringToObject(attribs?.style || '');
 
         return (
             <cite key={`${keyPrefix}-${index}`} className={classNames} style={style}>
@@ -482,7 +482,7 @@ function transformDelTag(node, index, keyPrefix) {
     if (node.type === 'tag' && node.name === 'del') {
         const { attribs = {}, children = [] } = node;
         const classNames = normaliseClassNames(attribs?.class || '');
-        const style = parseStyleString(attribs?.style || '');
+        const style = parseStyleStringToObject(attribs?.style || '');
 
         return (
             <del key={`${keyPrefix}-${index}`} className={classNames} style={style}>
@@ -490,4 +490,28 @@ function transformDelTag(node, index, keyPrefix) {
             </del>
         );
     }
+}
+
+/**
+ * Parses a shortcode tag from a string.
+ * @param {string} content - The shortcode string to parse.
+ * @returns {object|null} An object containing the shortcode name and attributes, or null if not a valid shortcode.
+ */
+export function parseShortcodeTag(content = '') {
+    const match = content.trim().match(/^\[([\w-]+)(.*?)\]$/);
+    
+    if (!match) return null;
+
+    const name = match[1];
+    const attrsString = match[2] || '';
+    
+    const attrs = {};
+    const attrRegex = /(\w+)="(.*?)"/g;
+    let attrMatch;
+
+    while ((attrMatch = attrRegex.exec(attrsString)) !== null) {
+        attrs[attrMatch[1]] = attrMatch[2];
+    }
+
+    return { name, attrs };
 }

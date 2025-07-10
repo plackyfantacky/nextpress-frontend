@@ -1,7 +1,8 @@
 import React from 'react';
-import { extractAttributeValue, preprocessBlock } from '@/lib/utils';
+import { extractAttributeValue, joinClassNames, preprocessBlock } from '@/lib/utils';
 import { normaliseClassNames } from '@/lib/styler';
-import { processAttributesToClassNames } from '@/lib/attributes';
+import { processAttributesToClassNames, parseNestedStyleAttributes, processStylesToClassNames } from '@/lib/attributes';
+import { parseStyleStringToObject } from "@/lib//parser";
 
 const blockRenderers = {
     'core/button': () => import('./blockButton'),
@@ -22,6 +23,7 @@ const blockRenderers = {
     'core/preformatted': () => import('./blockPreformatted'),
     'core/pullquote': () => import('./blockPullquote'),
     'core/quote': () => import('./blockQuote'),
+    'core/shortcode': () => import('./blockShortcode'),
     'core/table': () => import('./blockTable'),
 
     // Add other block renderers here
@@ -53,18 +55,37 @@ export function parseBlocks(blockData) {
 
 export async function renderBlock(block, keyPrefix = 'block', postContext = {}, inheritedProps = {}) {
     const { blockName, innerBlocks = [], innerHTML } = block;
+
     if (!blockName && (!innerHTML || innerHTML.trim() === '')) { return null; }
-    const forwaredInheritedProps = requireInheritedProps.has(blockName) ? inheritedProps : undefined;
 
     block = preprocessBlock(block);
 
+    const forwaredInheritedProps = requireInheritedProps.has(blockName) ? inheritedProps : undefined;
     const wrapperTag = block.wrapperTag || '';
-    let normalisedClassNames = normaliseClassNames(extractAttributeValue({ html: innerHTML, tag: wrapperTag, attribute: 'class' }) || '');
-    const processedAttributeClassNames = processAttributesToClassNames(block.attrs || {});
     const blockClassName = blockName.replace(/^core\//, '') + '-block';
     const idAttribute = extractAttributeValue({ html: innerHTML, attribute: 'id' }) || '';
 
-    normalisedClassNames = normalisedClassNames ? `${normalisedClassNames} ${processedAttributeClassNames}` : processedAttributeClassNames;
+
+    // extract className data from everywhere we can
+
+    const extractedClassNames = extractAttributeValue({ html: innerHTML, tag: wrapperTag, attribute: 'class' }) || '';
+    const extractedInlineStyles = extractAttributeValue({ html: innerHTML, tag: wrapperTag, attribute: 'style' }) || '';
+    const extractedNestedStyles = parseNestedStyleAttributes(block.attrs || {});
+
+    // process the class names and styles
+
+    const processedAttributeClassNames = processAttributesToClassNames(block.attrs || {}, true) || '';
+    const processedInlineStyles = processStylesToClassNames(extractedInlineStyles, 'inline') || '';
+    const processedNestedStyles = processStylesToClassNames(extractedNestedStyles, 'nested') || '';
+
+    //normalise the class names and styles
+
+    const normalisedClassNames = joinClassNames(
+        normaliseClassNames(extractedClassNames),
+        normaliseClassNames(processedAttributeClassNames),
+        normaliseClassNames(processedInlineStyles),
+        normaliseClassNames(processedNestedStyles)
+    ).trim();
 
     //TO DO: investigate if its possible for WordPress to allow attributes to be passed in the block data.
     // If so, we'll need to handle that here somewhere.

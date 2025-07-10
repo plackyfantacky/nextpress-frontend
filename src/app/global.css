@@ -72,9 +72,64 @@
     --color-black-mana: #848484;
     --color-vulcanised: #434343;
     --color-inkwell-inception: #1e1e1e;
+
+    --font-source-code: 'Source Code Pro', monospace;
+    --font-source-code-italic: 'Source Code Pro', monospace;
+    --font-source-sans: 'Source Sans 3', sans-serif;
+    --font-source-sans-italic: 'Source Sans 3', sans-serif;
 }
 
 @layer base {
+
+    /**
+     * @font-face
+     * - SourceCodePro-Italic-VariableFont_wght.ttf/woff
+     * - SourceCodePro-VariableFont_wght.ttf/woff
+     * - SourceSans3-Italic-VariableFont_wght.ttf/woff
+     * - SourceSans3-VariableFont_wght.ttf/woff
+     * - SourceSerif4-Italic-VariableFont_wght.ttf/woff
+     * - SourceSerif4-VariableFont_wght.ttf/woff
+    */
+
+    @font-face {
+        font-family: 'Source Code Pro';
+        src: 
+            url('/fonts/SourceCodePro-VariableFont_wght.ttf') format('truetype'),
+            url('/fonts/SourceCodePro-VariableFont_wght.woff') format('woff2');
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+    }
+
+    @font-face {
+        font-family: 'Source Code Pro';
+        src: 
+            url('/fonts/SourceCodePro-Italic-VariableFont_wght.ttf') format('truetype'),
+            url('/fonts/SourceCodePro-Italic-VariableFont_wght.woff') format('woff2');
+        font-weight: 100 900;
+        font-style: italic;
+        font-display: swap;
+    }
+
+    @font-face {
+        font-family: 'Source Sans 3';
+        src: 
+            url('/fonts/SourceSans3-VariableFont_wght.ttf') format('truetype'),
+            url('/fonts/SourceSans3-VariableFont_wght.woff') format('woff2');
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+    }
+
+    @font-face {
+        font-family: 'Source Sans 3';
+        src: 
+            url('/fonts/SourceSans3-Italic-VariableFont_wght.ttf') format('truetype'),
+            url('/fonts/SourceSans3-Italic-VariableFont_wght.woff') format('woff2');
+        font-weight: 100 900;
+        font-style: italic;
+        font-display: swap;
+    }
     
     h1 {
         font-size: var(--text-h1);
@@ -129,8 +184,9 @@
     }
 
 
-    :where(.button-block) {
-        @apply rounded-full px-4 py-2;
+    :where(.button-block),
+    button {
+        @apply rounded-full px-4 py-2 bg-inkwell-inception text-white;
     }
 
 }

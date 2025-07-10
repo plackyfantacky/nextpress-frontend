@@ -55,7 +55,8 @@ export function extractAttributeValue({ html = '', tag = '', attribute = '', ind
 
         const attrRegex = new RegExp(`${attribute}\\s*=\\s*(['"])(.*?)\\1`, 'gi');
         const attrMatches = [...match[0].matchAll(attrRegex)];
-        return attrMatches[index]?.[2] || null;
+        
+        return typeof attrMatches?.[index]?.[2] === 'string' ? attrMatches[index][2] : null;
     }
 
     // Otherwise: fallback to original logic
@@ -63,7 +64,7 @@ export function extractAttributeValue({ html = '', tag = '', attribute = '', ind
     const regex = new RegExp(pattern, 'gi');
     const matches = [...html.matchAll(regex)];
 
-    return matches[index]?.[2] || null;
+    return typeof matches?.[index]?.[2] === 'string' ? matches[index][2] : null;
 }
 
 /**
@@ -89,7 +90,7 @@ export function preprocessBlock(block) {
  * @returns {string} A filtered class list string without WordPress-specific classes.
  */
 export function filterWPClassNames(classList = '') {
-    if (!classList) return '';
+    if (!classList && typeof classList !== 'string') return '';
     
     const removeThese = [
         'wp-block',

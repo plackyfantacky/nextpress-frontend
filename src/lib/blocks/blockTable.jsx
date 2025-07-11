@@ -12,7 +12,7 @@ export default function BlockTable({ block, keyPrefix }) {
     );
     
     const tableClassNames = joinClassNames(
-        `{blcokClassName}__table`,
+        `${blockClassName}__table`,
         hasFixedLayout ? 'table-fixed' : '',
         processedClassNames
     );
@@ -20,7 +20,7 @@ export default function BlockTable({ block, keyPrefix }) {
      const caption = extractTag(innerHTML, 'figcaption', true) || '';
 
     return (
-        <Figure key={keyPrefix} className={figureClassNames} {...(idAttribute ? { id: idAttribute } : {})}>
+        <Figure key={keyPrefix} figureClassNames={figureClassNames} {...(idAttribute ? { id: idAttribute } : {})}>
             <table className={tableClassNames}>
                 {renderTableSection('thead', innerHTML)}
                 {renderTableSection('tbody', innerHTML)}

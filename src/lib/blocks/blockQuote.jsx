@@ -7,12 +7,14 @@ import { Blockquote } from "@/components/elements";
 export default function BlockQuote({ block, keyPrefix, children }) {
     const { idAttribute = '', blockClassName = '', processedClassNames = '', innerHTML = '' } = block;
 
+    const blockClassNames = joinClassNames(blockClassName, processedClassNames);
+
     return (
         <Blockquote
             block={block}
             key={keyPrefix}
-            className={joinClassNames(blockClassName, processedClassNames)}
-            {...(idAttribute ? { id: idAttribute } : {})}
+            wrapInFigure={true}
+            blockClassNames={blockClassNames}
         >
             {children?.length ? children : renderInlineHTML(extractTag(innerHTML, 'blockquote', true) || '')}
         </Blockquote>

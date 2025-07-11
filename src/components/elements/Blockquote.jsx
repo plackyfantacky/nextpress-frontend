@@ -3,8 +3,8 @@ import { extractTag } from '@/lib/utils';
 import { renderInlineHTML } from '@/lib/parser';
 import { Cite, Figure } from '@/components/elements';
 
-const Blockquote = ({ block, keyPrefix, wrapInFigure = false, children }) => {
-    const { idAttribute = '', blockClassName = '', processedClassNames = '', innerHTML = '' } = block;
+const Blockquote = ({ block, keyPrefix, wrapInFigure = false, blockClassNames = '', children }) => {
+    const { idAttribute = '', blockClassName = '', innerHTML = '' } = block;
 
     const hasChildren = Array.isArray(children) && children.length > 0;
     const citation = extractTag(innerHTML, 'cite', true) || '';
@@ -21,12 +21,16 @@ const Blockquote = ({ block, keyPrefix, wrapInFigure = false, children }) => {
         quoteContent = renderInlineHTML(rawHTML);
     }
 
-    const blockquoteClass = children?.length
-        ? `${blockClassName} ${processedClassNames}`
-        : `${blockClassName}__blockquote`;
+    // if we're wraping in a figure the clansname is different
+    const blockquoteClassName = wrapInFigure ? `${blockClassName}__blockquote` : blockClassName;
+    const figureClassName = wrapInFigure ? blockClassName : '';
 
     const quoteElement = (
-        <blockquote key={keyPrefix} className={blockquoteClass} {...(idAttribute ? { id: idAttribute } : {})}>
+        <blockquote 
+            key={keyPrefix} 
+            className={blockquoteClassName} 
+            {...(idAttribute ? { id: idAttribute } : {})}
+        >
             {quoteContent}
             {citation && (!hasEmbeddedCite || hasChildren) && (
                 <Cite className="block">
@@ -37,7 +41,7 @@ const Blockquote = ({ block, keyPrefix, wrapInFigure = false, children }) => {
     );
 
     return wrapInFigure ? (
-        <Figure className={blockClassName} key={keyPrefix}>
+        <Figure figureClassNames={figureClassName} key={keyPrefix}>
             {quoteElement}
         </Figure>
     ) : (

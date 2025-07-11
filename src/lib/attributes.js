@@ -16,6 +16,7 @@ const attributeHandlers = [
     handleBackgroundColor,
     handleFontSize,
     handleStyle,
+    handleVerticalAlignment,
     handleContentPosition
 ];
 
@@ -106,8 +107,8 @@ function handleCustomSpacing(attrs) {
         }
     ];
 
-    for(const group of spacingGroups) {
-        const { prefix, top, bottom, left, right } = group;   
+    for (const group of spacingGroups) {
+        const { prefix, top, bottom, left, right } = group;
 
         if (isNonZero(top) && isNonZero(bottom) && top === bottom) {
             classNames.push(`${prefix}y-[${top}]`);
@@ -177,7 +178,7 @@ function handleCustomContainer(attrs) {
                 if (attrs?.containerWidth) {
                     classNames.push(`w-[${attrs.containerWidth}]`);
                 }
-                if(attrs?.containerMXAuto) {
+                if (attrs?.containerMXAuto) {
                     classNames.push('mx-auto');
                 }
                 break;
@@ -209,7 +210,7 @@ function handleLayout(attrs) {
                 attrs.layout?.orientation
                     ? classNames.push(`flex-col`)
                     : classNames.push('flex-row');
-                    
+
                 attrs.layout?.wrapping
                     ? classNames.push('flex-wrap')
                     : classNames.push('flex-nowrap');
@@ -225,7 +226,7 @@ function handleLayout(attrs) {
 
                 if (attrs.layout?.justifyContent) {
                     attrs.layout.orientation === 'vertical'
-                        ?  classNames.push(`items-${flexAlignmentMap[attrs.layout.justifyContent] || 'start'}`)
+                        ? classNames.push(`items-${flexAlignmentMap[attrs.layout.justifyContent] || 'start'}`)
                         : classNames.push(`justify-${flexAlignmentMap[attrs.layout.justifyContent] || 'start'}`);
                 }
                 if (attrs.layout?.verticalAlignment) {
@@ -240,7 +241,7 @@ function handleLayout(attrs) {
                     classNames.push(`gap-[${attrs.layout.gap}]`);
                 }
             }
-            break;
+                break;
             case 'grid': {
                 classNames.push('grid');
                 /* coming from WordPress, either we have a columnCount (and maybe minimumColumnWidth = null) or a 
@@ -252,19 +253,19 @@ function handleLayout(attrs) {
                 } else {
                     classNames.push('grid-cols-1');
                 }
-                
+
                 // Handle grid gap
                 if (attrs.layout?.gap) {
                     classNames.push(`gap-[${attrs.layout.gap}]`);
                 }
             }
-            break;
-            
+                break;
+
             case 'block':
             default: {
                 classNames.push('block');
             }
-            break;
+                break;
         }
     }
 
@@ -279,7 +280,7 @@ function handleLayout(attrs) {
             classNames.push(`row-span-${attrs.style.layout.rowSpan}`);
         }
     }
-    
+
     return classNames.join(' ');
 }
 
@@ -290,7 +291,7 @@ function handleLayout(attrs) {
  */
 function handleTextColor(attrs) {
     if (!attrs || typeof attrs !== 'object' || !attrs.textColor) return '';
-    
+
     let textColor = attrs.textColor;
     textColor = convertColour(textColor);
     return `text-${textColor}`;
@@ -361,9 +362,9 @@ function handleStyle(attrs) {
     const classNames = [];
 
     // Handle typography
-    if ( attrs.style?.typography ) {
+    if (attrs.style?.typography) {
         const { fontStyle, fontWeight, fontSize } = attrs.style.typography;
-        if(fontStyle) classNames.push((fontStyle === 'italic') ? 'italic' : 'not-italic'); //Tailwind 4.1+
+        if (fontStyle) classNames.push((fontStyle === 'italic') ? 'italic' : 'not-italic'); //Tailwind 4.1+
 
         if (fontWeight) {
             // Tailwind uses font-weight classes like 'font-light', 'font-normal', 'font-bold', etc.
@@ -384,30 +385,51 @@ function handleStyle(attrs) {
         }
         if (fontSize) classNames.push(`text-[${fontSize}]`); // assuming fontSize is a valid CSS value like '16px', '1rem', etc.
     }
-    if( attrs.style?.elements ) {
+    if (attrs.style?.elements) {
         const elements = attrs.style.elements;
-        if(elements?.link?.color) classNames.push(`[&>a]:text-${convertColour(elements.link.color)}`);
-        if(elements?.heading?.text) {
+        if (elements?.link?.color) classNames.push(`[&>a]:text-${convertColour(elements.link.color)}`);
+        if (elements?.heading?.text) {
             const headingTextColor = convertColour(elements.heading.text);
             classNames.push(`has-headings:text-${headingTextColor}`);
         }
-        if(elements?.heading?.background) {
+        if (elements?.heading?.background) {
             const headingBackgroundColor = convertColour(elements.heading.background);
             classNames.push(`has-headings:bg-${headingBackgroundColor}`);
         }
     }
 
-    if( attrs.style?.shadow ) {
+    if (attrs.style?.shadow) {
 
     }
 
+    return classNames.join(' ');
+}
 
-    // // Handle text color e.g attrs.style?.elements?.text?.color
-    // if (attrs.style?.elements?.text?.color) {
-    //     let text = attrs.style.elements.text.color;
-    //     text = convertColour(text);
-    //     classNames.push(`text-${text}`);
-    // }
+/**
+ * Handles vertical alignment attributes and converts them to Tailwind CSS class names.
+ * This function checks for vertical alignment attributes in the attrs object and returns the corresponding Tailwind CSS class names.
+ * @param {object} attrs - The attributes object containing vertical alignment properties.
+ * @return {string} A Tailwind CSS class name for the vertical alignment, or an empty string if not applicable.
+ */
+function handleVerticalAlignment(attrs) {
+    if (!attrs || typeof attrs !== 'object' || !attrs.verticalAlignment) return '';
+
+    const classNames = [];
+
+    switch (attrs.verticalAlignment) {
+        case 'middle':
+        case 'center':
+            classNames.push('items-center');
+            break;
+        case 'bottom':
+            classNames.push('items-end');
+            break;
+        case 'top':
+        default:
+            classNames.push('items-start');
+            break;
+        // no default action needed 
+    }
 
     return classNames.join(' ');
 }
@@ -426,7 +448,7 @@ function handleContentPosition(attrs) {
     const classNames = [];
 
     //if contentPosition is set, we need to convert it to a Tailwind CSS class name
-    if(attrs?.contentPosition && typeof attrs.contentPosition === 'string') {
+    if (attrs?.contentPosition && typeof attrs.contentPosition === 'string') {
         const position = attrs.contentPosition || 'center center';
         const [vertical, horizontal] = position.split(' ');
 
@@ -438,7 +460,7 @@ function handleContentPosition(attrs) {
             top: 'start',
             bottom: 'end'
         };
-        
+
         classNames.push(`flex items-${direction[horizontal] || 'center'} justify-${direction[vertical] || 'center'}`);
     }
 

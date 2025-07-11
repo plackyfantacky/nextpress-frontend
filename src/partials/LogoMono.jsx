@@ -1,8 +1,9 @@
 import React from "react";
 
-const LogoMono = () => {
+const LogoMono = (props) => {
+    const { className = '' } = props;
     return (
-        <svg width="100%" height="100%" viewBox="0 0 49 49" xmlns="http://www.w3.org/2000/svg">
+        <svg width="100%" height="100%" viewBox="0 0 49 49" xmlns="http://www.w3.org/2000/svg" {...(className ? { className } : {} )}>
             <rect id="Artboard1" x="0" y="0" width="48.168" height="48.167" fill="none"></rect>
             <clipPath id="_clip1">
                 <rect x="0" y="0" width="48.168" height="48.167"></rect>

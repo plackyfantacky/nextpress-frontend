@@ -44,7 +44,7 @@ export default function BlockCover({ block, keyPrefix, postContext, children }) 
 
     const blockContainerClasses = joinClassNames(
         blockClassName,
-        'relative flex flex-col w-[100cqw] @container/cover'
+        'relative flex flex-col w-full @container/cover'
     );
 
     const blockImageClasses = joinClassNames(

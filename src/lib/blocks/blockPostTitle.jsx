@@ -19,7 +19,7 @@ export default function BlockPostTitle({ block, keyPrefix, postContext }) {
     const Tag = `h${level >= 1 && level <= 6 ? level : 2}`;
     const title = postContext?.postTitle || 'Untitled';
 
-    const normalisedClassNames = processAttributesToClassNames(attrs, true);
+    const processedClassNames = processAttributesToClassNames(attrs, true);
 
     const text = isLink ? (
         <>
@@ -29,7 +29,7 @@ export default function BlockPostTitle({ block, keyPrefix, postContext }) {
         </>
     ) : title;
 
-    const blockClassNames = joinClassNames('post-title', normalisedClassNames); //manual blockClassName as one isn't provided in the block
+    const blockClassNames = joinClassNames('post-title', processedClassNames); //manual blockClassName as one isn't provided in the block
 
     return (
         <Tag key={keyPrefix} className={`${blockClassNames}`} {...(idAttribute ? { id: idAttribute } : {})}>{text}</Tag>

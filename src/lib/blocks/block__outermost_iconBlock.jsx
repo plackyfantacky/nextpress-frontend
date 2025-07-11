@@ -5,7 +5,7 @@ import { parseHTML } from "@/lib/parser";
 import { Figure } from "@/components/elements";
 
 export default function Block__Outermost_IconBlock({ block, keyPrefix }) {
-    const { attrs = {}, idAttribute = '', normalisedClassNames = '' } = block;
+    const { attrs = {}, idAttribute = '', processedClassNames = '' } = block;
 
     const iconColour = convertColour(attrs.iconColor || attrs.iconColorValue || attrs.customIconColor || 'currentColor');
     const iconBackgroundColour = convertColour(attrs.iconBackgroundColor || attrs.iconBackgroundColorValue || attrs.customIconBackgroundColor || 'transparent');
@@ -16,7 +16,7 @@ export default function Block__Outermost_IconBlock({ block, keyPrefix }) {
     const iconWidth = attrs.width || '24px';
     
     // Strip any width-related Tailwind class (e.g. w-6, w-[10rem], w-full, etc.)
-    const filteredClassNames = normalisedClassNames
+    const filteredClassNames = processedClassNames
         .split(' ')
         .filter(cls => !/^w(-|\[)/.test(cls))
         .join(' ');

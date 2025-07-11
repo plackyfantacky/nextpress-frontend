@@ -1,8 +1,9 @@
 import React from 'react';
 import { extractAttributeValue, joinClassNames, preprocessBlock } from '@/lib/utils';
 import { normaliseClassNames } from '@/lib/styler';
-import { processAttributesToClassNames, parseNestedStyleAttributes, processStylesToClassNames } from '@/lib/attributes';
+import { processAttributesToClassNames } from '@/lib/attributes';
 import { parseStyleStringToObject } from "@/lib//parser";
+import { parseBlocks } from "@/lib/api";
 
 const blockRenderers = {
     'core/button': () => import('./blockButton'),
@@ -36,25 +37,8 @@ const requireInheritedProps = new Set([
     'core/column'
 ]);
 
-/**
- * Parses the JSON block data.
- * @param {*} blockData 
- * @return {Array} An array of parsed blocks.
- */
-export function parseBlocks(blockData) {
-    if (!blockData || typeof blockData !== 'string') return [];
-
-    try {
-        const parsed = JSON.parse(blockData);
-        return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-        console.error('Error parsing block data:', error, blockData?.slice?.(0, 100)); //we don't need that much data
-        return [];
-    }
-}
-
 export async function renderBlock(block, keyPrefix = 'block', postContext = {}, inheritedProps = {}) {
-    const { blockName, innerBlocks = [], innerHTML } = block;
+    const {attrs = {}, blockName, innerBlocks = [], innerHTML } = block;
 
     if (!blockName && (!innerHTML || innerHTML.trim() === '')) { return null; }
 
@@ -65,27 +49,7 @@ export async function renderBlock(block, keyPrefix = 'block', postContext = {}, 
     const blockClassName = blockName.replace(/^core\//, '') + '-block';
     const idAttribute = extractAttributeValue({ html: innerHTML, attribute: 'id' }) || '';
 
-
-    // extract className data from everywhere we can
-
-    const extractedClassNames = extractAttributeValue({ html: innerHTML, tag: wrapperTag, attribute: 'class' }) || '';
-    const extractedInlineStyles = extractAttributeValue({ html: innerHTML, tag: wrapperTag, attribute: 'style' }) || '';
-    const extractedNestedStyles = parseNestedStyleAttributes(block.attrs || {});
-
-    // process the class names and styles
-
-    const processedAttributeClassNames = processAttributesToClassNames(block.attrs || {}, true) || '';
-    const processedInlineStyles = processStylesToClassNames(extractedInlineStyles, 'inline') || '';
-    const processedNestedStyles = processStylesToClassNames(extractedNestedStyles, 'nested') || '';
-
-    //normalise the class names and styles
-
-    const normalisedClassNames = joinClassNames(
-        normaliseClassNames(extractedClassNames),
-        normaliseClassNames(processedAttributeClassNames),
-        normaliseClassNames(processedInlineStyles),
-        normaliseClassNames(processedNestedStyles)
-    ).trim();
+    const processedClassNames = processAttributesToClassNames(attrs);
 
     //TO DO: investigate if its possible for WordPress to allow attributes to be passed in the block data.
     // If so, we'll need to handle that here somewhere.
@@ -103,7 +67,7 @@ export async function renderBlock(block, keyPrefix = 'block', postContext = {}, 
         <Component
             key={keyPrefix}
             keyPrefix={`${keyPrefix}-${Math.random().toString(36).substring(2, 8)}`}
-            block={{ ...block, idAttribute, blockClassName, normalisedClassNames }}
+            block={{ ...block, idAttribute, blockClassName, processedClassNames }}
             postContext={postContext}
             children={children}
             inheritedProps={forwaredInheritedProps}

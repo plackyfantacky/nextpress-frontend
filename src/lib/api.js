@@ -97,3 +97,20 @@ export async function getHomePageBlocks() {
 
     return data?.page?.blocksJSON || [];
 }
+
+/**
+ * Parses the JSON block data.
+ * @param {*} blockData 
+ * @return {Array} An array of parsed blocks.
+ */
+export function parseBlocks(blockData) {
+    if (!blockData || typeof blockData !== 'string') return [];
+
+    try {
+        const parsed = JSON.parse(blockData);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        console.error('Error parsing block data:', error, blockData?.slice?.(0, 100)); //we don't need that much data
+        return [];
+    }
+}

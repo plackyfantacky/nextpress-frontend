@@ -3,7 +3,7 @@ import { joinClassNames } from "@/lib/utils";
 import { renderBlocksRecursively } from "@/lib/blocks"; // from the index.js file in the blocks directory
 
 export default function BlockList({ block, keyPrefix, postContext = {} }) {
-    const { attrs = {}, idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = '' } = block;
+    const { attrs = {}, idAttribute = '', blockClassName = '', processedClassNames = '', innerHTML = '' } = block;
     const { ordered = false } = attrs;
 
     const Tag = ordered ? 'ol' : 'ul';
@@ -17,7 +17,7 @@ export default function BlockList({ block, keyPrefix, postContext = {} }) {
     const blockClassNames = joinClassNames(
         blockClassName,
         `level-${currentLevel}`,
-        normalisedClassNames,
+        processedClassNames,
         ordered ? 'list-ordered' : 'list-unordered'
     );
 

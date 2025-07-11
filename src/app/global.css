@@ -26,7 +26,7 @@
     --colspan-10: span 10;
     --colspan-11: span 11;
     --colspan-12: span 12;
-    
+
     /* TODO: investigate why these aren't coming through to the frontend. */
     --text-base: 1rem;
     --text-sm: 0.875rem;
@@ -39,10 +39,10 @@
     --text-7xl: 4.5rem;
     --text-8xl: 6rem;
     --text-9xl: 8rem;
-    
+
     --width-content: 40rem;
     --width-wide: 60rem;
-    
+
     /* Wordpress default colours */
     --color-cyan-bluish-gray: #abb8c3;
     --color–pale-pink: #f78da7;
@@ -60,7 +60,6 @@
     --color-secondary: #ae6e1d;
     --color-carona: #f99d2a;
     --color-hamtaro-brown: #ae6e1d;
-    --color-inkwell: #1e1e1e;
     --color-torchlight: #ffca8a;
     --color-blanched-almond: #ffebd2;
     --color-tuscan: #ffd7a6;
@@ -72,15 +71,35 @@
     --color-black-mana: #848484;
     --color-vulcanised: #434343;
     --color-inkwell-inception: #1e1e1e;
+    --color-placebo: #e6e6e6;
 
-    --font-source-code: 'Source Code Pro', monospace;
-    --font-source-code-italic: 'Source Code Pro', monospace;
-    --font-source-sans: 'Source Sans 3', sans-serif;
-    --font-source-sans-italic: 'Source Sans 3', sans-serif;
+    --font-source-code: "Source Code Pro", monospace;
+    --font-source-code-italic: "Source Code Pro", monospace;
+    --font-source-sans: "Source Sans 3", sans-serif;
+    --font-source-sans-italic: "Source Sans 3", sans-serif;
+
+    --custom-u-marker: "□";
+    --custom-u-marker-2: "◆";
+    --custom-u-marker-3: "∷";
+    --custom-u-marker-4: "◦";
+    --custom-u-marker-5: "◉";
+
+}
+
+@counter-style circled-decimal {
+    system: fixed 0;
+    symbols: "\24EA" "\2460" "\2461" "\2462" "\2463" "\2464" "\2465" "\2466"
+        "\2467" "\2468" "\2469" "\246A" "\246B" "\246C" "\246D" "\246E"
+        "\246F" "\2470" "\2471" "\2472" "\2473" "\3251" "\3252" "\3253"
+        "\3254" "\3255" "\3256" "\3257" "\3258" "\3259" "\325a" "\325b"
+        "\325c" "\325d" "\325e" "\325f" "\32b1" "\32b2" "\32b3" "\32b4"
+        "\32b5" "\32b6" "\32b7" "\32b8" "\32b9" "\32ba" "\32bb" "\32bc"
+        "\32bd" "\32be" "\32bf";
+    /* symbols: '⓪' '①' '②' '③' '④' '⑤' '⑥' '⑦' '⑧' '⑨' '⑩' '⑪' '⑫' '⑬' '⑭' '⑮' '⑯' '⑰' '⑱' '⑲' '⑳' '㉑' '㉒' '㉓' '㉔' '㉕' '㉖' '㉗' '㉘' '㉙' '㉚' '㉛' '㉜' '㉝' '㉞' '㉟' '㊱' '㊲' '㊳' '㊴' '㊵' '㊶' '㊷' '㊸' '㊹' '㊺' '㊻' '㊼' '㊽' '㊾' '㊿'; */
+    suffix: "\00a0\00a0";
 }
 
 @layer base {
-
     /**
      * @font-face
      * - SourceCodePro-Italic-VariableFont_wght.ttf/woff
@@ -92,89 +111,334 @@
     */
 
     @font-face {
-        font-family: 'Source Code Pro';
-        src: 
-            url('/fonts/SourceCodePro-VariableFont_wght.ttf') format('truetype'),
-            url('/fonts/SourceCodePro-VariableFont_wght.woff') format('woff2');
+        font-family: "Source Code Pro";
+        src:
+            url("/fonts/SourceCodePro-VariableFont_wght.ttf") format("truetype"),
+            url("/fonts/SourceCodePro-VariableFont_wght.woff") format("woff2");
         font-weight: 100 900;
         font-style: normal;
         font-display: swap;
     }
 
     @font-face {
-        font-family: 'Source Code Pro';
-        src: 
-            url('/fonts/SourceCodePro-Italic-VariableFont_wght.ttf') format('truetype'),
-            url('/fonts/SourceCodePro-Italic-VariableFont_wght.woff') format('woff2');
+        font-family: "Source Code Pro";
+        src:
+            url("/fonts/SourceCodePro-Italic-VariableFont_wght.ttf")
+                format("truetype"),
+            url("/fonts/SourceCodePro-Italic-VariableFont_wght.woff")
+                format("woff2");
         font-weight: 100 900;
         font-style: italic;
         font-display: swap;
     }
 
     @font-face {
-        font-family: 'Source Sans 3';
-        src: 
-            url('/fonts/SourceSans3-VariableFont_wght.ttf') format('truetype'),
-            url('/fonts/SourceSans3-VariableFont_wght.woff') format('woff2');
+        font-family: "Source Sans 3";
+        src:
+            url("/fonts/SourceSans3-VariableFont_wght.ttf") format("truetype"),
+            url("/fonts/SourceSans3-VariableFont_wght.woff") format("woff2");
         font-weight: 100 900;
         font-style: normal;
         font-display: swap;
     }
 
     @font-face {
-        font-family: 'Source Sans 3';
-        src: 
-            url('/fonts/SourceSans3-Italic-VariableFont_wght.ttf') format('truetype'),
-            url('/fonts/SourceSans3-Italic-VariableFont_wght.woff') format('woff2');
+        font-family: "Source Sans 3";
+        src:
+            url("/fonts/SourceSans3-Italic-VariableFont_wght.ttf")
+                format("truetype"),
+            url("/fonts/SourceSans3-Italic-VariableFont_wght.woff")
+                format("woff2");
         font-weight: 100 900;
         font-style: italic;
         font-display: swap;
     }
-    
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-source-sans leading-[1.1] font-medium tracking-[-0.014em] antialiased mb-4;
+
+        & strong {
+            @apply font-extrabold;
+        }
+
+        & em {
+            @apply font-source-sans-italic;
+        }
+
+        & sup {
+            @apply align-top relative px-[1px];
+        }
+
+        & sub {
+            @apply align-baseline relative -bottom-1 px-[1px];
+        }
+    }
+
     h1 {
         font-size: var(--text-h1);
-        @apply leading-[1.6] font-bold;
     }
-    
     h2 {
         font-size: var(--text-h2);
-        @apply leading-[1.6] font-bold;
     }
-    
     h3 {
         font-size: var(--text-h3);
-        @apply leading-[1.6] font-bold;
     }
-    
     h4 {
         font-size: var(--text-h4);
-        @apply leading-[1.6] font-bold;
     }
-    
     h5 {
         font-size: var(--text-h5);
-        @apply leading-[1.6] font-bold;
     }
-    
     h6 {
         font-size: var(--text-h6);
-        @apply leading-[1.6] font-bold;
     }
-    
+
+    h1 sup {
+        @apply top-1 text-sm;
+    }
+    h2 sup {
+        @apply top-0.5 text-sm;
+    }
+    h3 sup {
+        @apply top-0.5 text-xs;
+    }
+    h4 sup {
+        @apply -top-0 text-xs font-light;
+    }
+    h5 sup {
+        @apply -top-0.5 text-xs font-extralight;
+    }
+    h6 sup {
+        @apply -top-0.5 text-xs font-extralight;
+    }
+
+    h1 sub {
+        @apply text-sm;
+    }
+    h2 sub {
+        @apply text-sm;
+    }
+    h3 sub {
+        @apply text-xs;
+    }
+    h4 sub {
+        @apply text-xs font-light;
+    }
+    h5 sub {
+        @apply text-xs font-extralight;
+    }
+    h6 sub {
+        @apply text-xs font-extralight;
+    }
+
     p {
-        @apply text-base font-light;
+        @apply text-base font-light mb-4;
+
+        strong {
+            @apply font-bold;
+        }
+
+        a {
+            @apply text-primary hover:text-secondary transition-colors underline underline-offset-2;
+        }
     }
-    
+
+    del {
+        @apply opacity-40 font-source-sans-italic italic;
+    }
+
+    mark[style] {
+        @apply px-1;
+    }
+
+    kbd {
+        @apply inline-block leading-0 py-3 px-2 border-2 border-inkwell-inception rounded-lg mx-1 text-sm;
+    }
+
+    figure.image-block {
+        @apply inline-block text-center w-min;
+
+        a {
+            @apply inline-block w-fit;
+
+            img {
+                @apply max-w-[initial];
+            }
+        }
+
+        figcaption {
+            @apply max-w-full break-words font-light text-sm;
+        }
+    }
+
+    .quote-block blockquote {
+        @apply p-8 border-l-2 border-primary relative;
+
+        p {
+            @apply text-2xl italic font-thin last:mb-0;
+        }
+
+        cite {
+            @apply absolute bottom-0 right-0 font-thin;
+        }
+    }
+
+    .pullquote-block blockquote {
+        @apply p-12 relative bg-placebo rounded-sm text-center flex flex-col gap-4;
+
+        p {
+            @apply text-3xl font-extralight;
+        }
+
+        cite {
+            @apply text-2xl font-extralight;
+        }
+    }
+
+    .cover-block {
+        @apply min-h-[100px];
+    }
+
     .code-block {
-        @apply p-4 overflow-scroll;
+        @apply p-4 overflow-scroll rounded-sm;
     }
+
+    .preformatted-block {
+        @apply p-4 overflow-scroll bg-placebo font-source-code font-light rounded-sm;
+    }
+
+    .list-block {
+        @apply list-inside pl-4;
+
+        &:is(ul) {
+            @apply list-disc;
+        }
+
+        ul {
+            @apply list-[circle];
+
+            ul {
+                @apply list-[square];
+
+                ul {
+                    @apply font-source-sans list-none;
+
+                    li {
+                        @apply before:content-[var(--custom-u-marker)] before:mr-2;
+
+                        li {
+                            @apply before:content-[var(--custom-u-marker-2)] before:mr-2;
+
+                            li {
+                                @apply before:content-[var(--custom-u-marker-3)] before:mr-2;
+
+                                li {
+                                    @apply before:content-[var(--custom-u-marker-4)] before:mr-2;
+
+                                    li {
+                                        @apply before:content-[var(--custom-u-marker-5)] before:mr-2;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        &:is(ol) {
+            @apply list-decimal;
+
+            ol {
+                @apply list-[lower-alpha];
+
+                ol {
+                    @apply list-[lower-roman];
+
+                    ol {
+                        @apply list-[upper-alpha];
+
+                        ol {
+                            @apply list-[upper-roman];
+
+                            ol {
+                                @apply list-[circled-decimal] pl-3;
+
+                                ::marker {
+                                    @apply text-xs;
+                                }
+                                
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        li {
+            @apply mb-2 last:mb-0;
+        }
+    }
+
+    .table-block {
+        @apply w-full overflow-x-auto;
+
+        table {
+            @apply w-full text-left border-collapse border border-inkwell-inception;
+
+            thead {
+                @apply bg-primary text-inkwell-inception;
+
+                th {
+                    @apply font-source-sans font-semibold text-sm p-2 border-b border-inkwell-inception;
+                }
+            }
+
+            tbody {
+                td {
+                    @apply font-source-sans font-light text-sm p-2 border-b border-inkwell-inception;
+                }
+    
+                tr:nth-child(odd) {
+                    @apply bg-placebo;
+                }
+            }
+
+            tfoot {
+                @apply bg-inkwell-inception text-white;
+
+                td {
+                    @apply font-source-sans font-normal text-sm p-2 border-t bg-inkwell-inception;
+                }
+            }    
+        }
+        
+        figcaption {
+            @apply font-source-sans text-sm font-light p-2 text-center;
+        }
+    }
+
+    details {
+        @apply mb-4 pb-4 border-b border-ash;
+    }
+
+    .media-text-block {
+        @apply gap-8;
+    }
+
+    /* content sections /page specific */
 
     .section1 {
         .cover-block {
             .cover-image {
                 @apply bg-no-repeat bg-cover bg-center;
             }
-    
+
             .cover-content {
                 h1 {
                     @apply leading-[1];
@@ -183,14 +447,13 @@
         }
     }
 
-
     :where(.button-block),
     button {
         @apply rounded-full px-4 py-2 bg-inkwell-inception text-white;
     }
-
 }
 
+/* this need to stay outside of @layer in order to work */
 .modal {
     display: none;
 

@@ -2,9 +2,9 @@ import React from "react";
 import { joinClassNames, extractTag } from "@/lib/utils";
 
 const blockPreformatted = ({ block, keyPrefix }) => {
-    const { idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = '' } = block;
+    const { idAttribute = '', blockClassName = '', processedClassNames = '', innerHTML = '' } = block;
 
-    const blockClassNames = joinClassNames(blockClassName, normalisedClassNames, 'whitespace-pre-wrap');
+    const blockClassNames = joinClassNames(blockClassName, processedClassNames, 'whitespace-pre-wrap');
     const preHTML = extractTag(innerHTML, 'pre', true) || '';    
     
     return (

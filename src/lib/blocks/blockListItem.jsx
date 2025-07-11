@@ -3,14 +3,14 @@ import { extractTag, joinClassNames } from "@/lib/utils";
 import { renderInlineHTML } from "@/lib/parser";
 
 export default function BlockListItem({ block, keyPrefix, children, postContext = {} }) {
-    const {idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = '' } = block;
+    const {idAttribute = '', blockClassName = '', processedClassNames = '', innerHTML = '' } = block;
 
     const content = extractTag(innerHTML, 'li', true) || '';
     const currentLevel = postContext?.listLevel || 1;
     
     const blockClassNames = joinClassNames(
         blockClassName,
-        normalisedClassNames,
+        processedClassNames,
         `list-item list-item-level-${currentLevel}`,
     );
 

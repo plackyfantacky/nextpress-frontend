@@ -4,9 +4,9 @@ import hljs from 'highlight.js';
 import { parseHTML } from "../parser";
 
 const blockCode = ({ block, keyPrefix }) => {
-    const { idAttribute = '', blockClassName = '', normalisedClassNames = '', innerHTML = '' } = block;
+    const { idAttribute = '', blockClassName = '', processedClassNames = '', innerHTML = '' } = block;
 
-    const blockClassNames = joinClassNames(blockClassName, normalisedClassNames, 'hljs');
+    const blockClassNames = joinClassNames(blockClassName, processedClassNames, 'hljs');
         
     const codeHTML = extractTag(innerHTML, 'code', true) || '';
     

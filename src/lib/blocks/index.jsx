@@ -28,6 +28,7 @@ const blockRenderers = {
     'core/table': () => import('./blockTable'),
 
     // Add other block renderers here
+    'costered-blocks/button-text': () => import('./block__costeredBlocks_buttonText'),
     'outermost/icon-block': () => import('./block__outermost_iconBlock'),
 };
 

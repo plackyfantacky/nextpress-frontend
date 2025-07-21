@@ -25,6 +25,7 @@ export default function Block__Outermost_IconBlock({ block, keyPrefix }) {
         ['icon-block'],
         filteredClassNames,
         [`text-${iconColour}`],
+        ['[&>svg]:fill-current'],
         [`bg-${iconBackgroundColour}`],
         flipHorizontally,
         flipVertically

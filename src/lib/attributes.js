@@ -387,7 +387,9 @@ function handleStyle(attrs) {
     }
     if (attrs.style?.elements) {
         const elements = attrs.style.elements;
-        if (elements?.link?.color) classNames.push(`[&>a]:text-${convertColour(elements.link.color)}`);
+        //TODO: core/button has been updated to support innerblocks, so we need to come back and monitor this.
+        //if (elements?.link?.color) classNames.push(`[&>a]:text-${convertColour(elements.link.color)}`);
+
         if (elements?.heading?.text) {
             const headingTextColor = convertColour(elements.heading.text);
             classNames.push(`has-headings:text-${headingTextColor}`);

@@ -100,15 +100,6 @@
 }
 
 @layer base {
-    /**
-     * @font-face
-     * - SourceCodePro-Italic-VariableFont_wght.ttf/woff
-     * - SourceCodePro-VariableFont_wght.ttf/woff
-     * - SourceSans3-Italic-VariableFont_wght.ttf/woff
-     * - SourceSans3-VariableFont_wght.ttf/woff
-     * - SourceSerif4-Italic-VariableFont_wght.ttf/woff
-     * - SourceSerif4-VariableFont_wght.ttf/woff
-    */
 
     @font-face {
         font-family: "Source Code Pro";
@@ -261,7 +252,7 @@
     }
 
     figure.image-block {
-        @apply inline-block text-center w-min;
+        @apply inline-block text-center w-fit;
 
         a {
             @apply inline-block w-fit;
@@ -447,9 +438,37 @@
         }
     }
 
+    .buttons-block {
+        @apply gap-4;
+    }
+
     :where(.button-block),
     button {
-        @apply rounded-full px-4 py-2 bg-inkwell-inception text-white;
+        @apply flex items-center gap-2 w-fit rounded-full bg-inkwell-inception text-white;
+
+        .cb-button-text {
+            @apply text-inherit;
+        }
+
+        figure {
+            @apply inline-block;
+        }
+    }
+
+    button {
+        @apply px-4 py-2;
+
+        &:hover {
+            @apply bg-secondary;
+        }
+
+        &:active {
+            @apply bg-torchlight text-inkwell-inception;
+        }
+
+        &:focus-visible {
+            @apply outline-2 outline-primary;
+        }
     }
 }
 
